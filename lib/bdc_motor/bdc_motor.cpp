@@ -88,12 +88,12 @@ void bdc_set_velocity(BDC bdc, int32_t velocity) {
         PWMOutputState(bdc.PWM_BASE_IN1, bdc.PWM_OUT_BIT_IN1, bdc.PWM_OUT_BIT_IN1);
 		GPIOPinWrite(bdc.GPIO_PORT_BASE_IN2, bdc.GPIO_PIN_IN2, bdc.GPIO_PIN_IN2);
         // No duty cycle scaling is needed, since input is directly the duty cycle
-        PWMPulseWidthSet(bdc.PWM_BASE_IN1, bdc.PWM_OUT_IN1, abs(velocity));
+        // However, need to invert the duty cycle when reversing direction
+        PWMPulseWidthSet(bdc.PWM_BASE_IN1, bdc.PWM_OUT_IN1, 3999 - abs(velocity));
 	} else {
 		PWMOutputState(bdc.PWM_BASE_IN1, bdc.PWM_OUT_BIT_IN1, bdc.PWM_OUT_BIT_IN1);
 		GPIOPinWrite(bdc.GPIO_PORT_BASE_IN2, bdc.GPIO_PIN_IN2, 0);
         // No duty cycle scaling is needed, since input is directly the duty cycle
-        // However, need to invert the duty cycle when reversing direction
         PWMPulseWidthSet(bdc.PWM_BASE_IN1, bdc.PWM_OUT_IN1, abs(velocity));
 	}
 }
