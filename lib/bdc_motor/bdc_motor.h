@@ -75,13 +75,6 @@ typedef struct BDCs {
 	uint32_t GPIO_PIN_CS;
 	uint32_t ADC_BASE_CS;
 	uint32_t ADC_CTL_CH_CS;
-#ifdef MOTOR@
-
-
-
-
-#endif
-
 
 } BDC;
 
