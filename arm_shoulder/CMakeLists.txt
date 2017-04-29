@@ -4,7 +4,7 @@ project(arm_shoulder)
 # Include rosserial libraries for TivaC
 include_directories(${ROS_LIB_DIR})
 
-include_directories(../lib/bdc_motor/)
+#include_directories(../lib/bdc_motor/)
 # add_library(bdc_motor STATIC bdc_motor.cpp)
 # target_link_libraries(arm_shoulder bdc_motor)
 
@@ -16,8 +16,8 @@ add_definitions(-DRX_BUFFER_SIZE=256)
 # Generate target for TivaC
 generate_tivac_firmware(
   USB
-  SRCS arm_shoulder.cpp ../lib/bdc_motor/bdc_motor.h
-  INCS .
+  SRCS arm_shoulder.cpp ../lib/bdc_motor/bdc_motor.cpp
+  INCS . ../lib/
   BOARD tm4c123gxl
   DEVICE_SILICON TARGET_IS_TM4C123_RB2
 )

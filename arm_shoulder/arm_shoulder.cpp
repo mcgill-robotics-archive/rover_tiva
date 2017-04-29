@@ -11,7 +11,7 @@ extern "C"
   #include "inc/hw_memmap.h"
 }
 
-#include <bdc_motor.h>
+#include "../lib/bdc_motor/bdc_motor.h"
 
 // ROS includes
 #include <ros.h>
