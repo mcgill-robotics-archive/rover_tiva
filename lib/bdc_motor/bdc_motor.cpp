@@ -1,5 +1,5 @@
 /*
- * bdc_motor.c
+ * bdc_motor.cpp
  *
  *  Created on: Mar 29, 2017
  *      Author: steven
