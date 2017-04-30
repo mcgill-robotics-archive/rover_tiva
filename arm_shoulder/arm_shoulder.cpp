@@ -122,10 +122,13 @@ int main(void) {
 
   bdc_init(motor_a);
   bdc_set_enabled(motor_a, 1);
+  bdc_init(motor_b);
+  bdc_set_enabled(motor_b, 1);
 
   while (1)
   {
     bdc_set_velocity(motor_a, vel_a);
+    bdc_set_velocity(motor_b, vel_b);
     nh.spinOnce();
     //nh.getHardware()->delay(100);
   }
