@@ -120,6 +120,42 @@ int main(void) {
   motor_b.ADC_BASE_CS = ADC0_BASE;
   motor_b.ADC_CTL_CH_CS = ADC_CTL_CH2;
 
+  // Motor initialization
+  BDC motor_c; 
+  // IN1 - Speed Output PA6
+  motor_c.SYSCTL_PERIPH_PWM_IN1 = SYSCTL_PERIPH_PWM1;
+  motor_c.SYSCTL_PERIPH_GPIO_IN1 = SYSCTL_PERIPH_GPIOA;
+  motor_c.GPIO_PWM_IN1 = GPIO_PA6_M1PWM2;
+  motor_c.GPIO_PORT_BASE_IN1 = GPIO_PORTA_BASE;
+  motor_c.GPIO_PIN_IN1 = GPIO_PIN_6;
+  motor_c.PWM_BASE_IN1 = PWM1_BASE;
+  motor_c.PWM_GEN_IN1 = PWM_GEN_1;
+  motor_c.PWM_OUT_BIT_IN1 = PWM_OUT_2_BIT;
+  motor_c.PWM_OUT_IN1 = PWM_OUT_2;
+  // IN2 - Direction Output PA7
+  motor_c.SYSCTL_PERIPH_GPIO_IN2 = SYSCTL_PERIPH_GPIOA;
+  motor_c.GPIO_PORT_BASE_IN2 = GPIO_PORTA_BASE;
+  motor_c.GPIO_PIN_IN2 = GPIO_PIN_7;
+  // nFAULT - Fault Status Input PD7
+  motor_c.SYSCTL_PERIPH_GPIO_nFAULT = SYSCTL_PERIPH_GPIOD;
+  motor_c.GPIO_PORT_BASE_nFAULT = GPIO_PORTD_BASE;
+  motor_c.GPIO_PIN_nFAULT = GPIO_PIN_7;
+  // nRESET - Reset Output PC7
+  motor_c.SYSCTL_PERIPH_GPIO_nRESET = SYSCTL_PERIPH_GPIOC;
+  motor_c.GPIO_PORT_BASE_nRESET = GPIO_PORTC_BASE;
+  motor_c.GPIO_PIN_nRESET = GPIO_PIN_7;
+  // BRAKE - Brake Output PE4
+  motor_c.SYSCTL_PERIPH_GPIO_BRAKE = SYSCTL_PERIPH_GPIOE;
+  motor_c.GPIO_PORT_BASE_BRAKE = GPIO_PORTE_BASE;
+  motor_c.GPIO_PIN_BRAKE = GPIO_PIN_4;
+  // CS - Current Sense Input PE5
+  motor_c.SYSCTL_PERIPH_ADC_CS = SYSCTL_PERIPH_ADC0;
+  motor_c.SYSCTL_PERIPH_GPIO_CS = SYSCTL_PERIPH_GPIOE;
+  motor_c.GPIO_PORT_BASE_CS = GPIO_PORTE_BASE;
+  motor_c.GPIO_PIN_CS = GPIO_PIN_5;
+  motor_c.ADC_BASE_CS = ADC0_BASE;
+  motor_c.ADC_CTL_CH_CS = ADC_CTL_CH8;
+
   bdc_init(motor_a);
   bdc_set_enabled(motor_a, 1);
   bdc_init(motor_b);
