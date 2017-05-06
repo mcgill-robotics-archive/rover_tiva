@@ -10,36 +10,38 @@
  */
 
 //TODO Clean up these includes
-#include <stdint.h>
-#include <stdlib.h>
-#include <stdbool.h>
-#include <math.h>
-#include <stdio.h>
-#include <inttypes.h>
-#include "inc/hw_memmap.h"
-#include "inc/hw_types.h"
-#include "inc/hw_gpio.h"
-#include "inc/hw_qei.h"
-#include "inc/hw_ssi.h"
-#include "driverlib/sysctl.h"
-#include "driverlib/interrupt.h"
-#include "driverlib/timer.h"
-#include "driverlib/fpu.h"
-#include "driverlib/gpio.h"
-#include "driverlib/debug.h"
-#include "driverlib/pwm.h"
-#include "driverlib/pin_map.h"
-#include "driverlib/qei.h"
-#include "driverlib/ssi.h"
-#include "driverlib/rom.h"
-#include "driverlib/systick.h"
+//#include <stdint.h>
+//#include <stdlib.h>
+//#include <stdbool.h>
+//#include <math.h>
+//#include <stdio.h>
+//#include <inttypes.h>
+//#include "inc/hw_memmap.h"
+//#include "inc/hw_types.h"
+//#include "inc/hw_gpio.h"
+//#include "inc/hw_qei.h"
+//#include "inc/hw_ssi.h"
+//#include "driverlib/sysctl.h"
+//#include "driverlib/interrupt.h"
+//#include "driverlib/timer.h"
+//#include "driverlib/fpu.h"
+//#include "driverlib/gpio.h"
+//#include "driverlib/debug.h"
+//#include "driverlib/pwm.h"
+//#include "driverlib/pin_map.h"
+//#include "driverlib/qei.h"
+//#include "driverlib/ssi.h"
+//#include "driverlib/rom.h"
+//#include "driverlib/systick.h"
 //#include "driverlib/uart.h"
 //#include "utils/uartstdio.h"
-#include "inc/tm4c123gh6pm.h"
-#include "driverlib/adc.h"
+//#include "inc/tm4c123gh6pm.h"
+//#include "driverlib/adc.h"
 
-//#ifndef BDC_MOTOR_H_
-//#define BDC_MOTOR_H_
+#include "../tiva_lib_includes.h"
+
+#ifndef BDC_MOTOR_H_
+#define BDC_MOTOR_H_
 
 typedef struct BDCs {
 	// IN1 - Speed Output
@@ -96,4 +98,4 @@ uint8_t bdc_get_fault(BDC bdc);
 // Enable or disable motor driver. Toggle to reset a fault
 void bdc_set_enabled(BDC bdc, uint8_t enabled);
 
-//#endif /* BDC_MOTOR_H_ */
+#endif /* BDC_MOTOR_H_ */

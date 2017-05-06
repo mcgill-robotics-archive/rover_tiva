@@ -4,6 +4,7 @@
 
 // MR Lib includes
 #include "../lib/bdc_motor/bdc_motor.h"
+#include "../lib/inc_encoder/inc_encoder.h"
 
 // ROS includes
 #include <ros.h>
@@ -25,6 +26,9 @@ ros::NodeHandle nh;
 // Motor speeds
 volatile int32_t vel_a = 0;
 volatile int32_t vel_b = 0;
+volatile uint32_t inc_pos_a = 0;
+volatile uint32_t inc_vel_a = 0;
+volatile int32_t inc_dir_a = 0;
 
 void vel_a_cb(const std_msgs::Int32& msg) {
   vel_a = msg.data;
@@ -38,6 +42,9 @@ void vel_b_cb(const std_msgs::Int32& msg) {
 
 ros::Subscriber<std_msgs::Int32> sub_b("motor_shoulder_b", &vel_b_cb);
 
+std_msgs::Int32 pos_a_msg;
+ros::Publisher inc_encoder_a("inc_encoder_a", &pos_a_msg);
+
 int main(void) {
   // Tiva boilerplate
   MAP_FPUEnable();
@@ -47,6 +54,7 @@ int main(void) {
   nh.initNode();
   nh.subscribe(sub_a);
   nh.subscribe(sub_b);
+  nh.advertise(inc_encoder_a);
 
   // Motor initialization
   BDC motor_a; 
@@ -156,16 +164,36 @@ int main(void) {
   motor_c.ADC_BASE_CS = ADC0_BASE;
   motor_c.ADC_CTL_CH_CS = ADC_CTL_CH8;
 
+  INC inc_a;
+  inc_a.PHA_GPIO_PIN= GPIO_PIN_6;
+  inc_a.PHB_GPIO_PIN= GPIO_PIN_7;
+  inc_a.IDX_GPIO_PIN= GPIO_PIN_3;
+  inc_a.QEI_SYSCTL_PERIPH_GPIO= SYSCTL_PERIPH_GPIOD;
+  inc_a.QEI_GPIO_P_PHA= GPIO_PD6_PHA0;
+  inc_a.QEI_GPIO_P_PHB= GPIO_PD7_PHB0;
+  inc_a.QEI_GPIO_P_IDX= GPIO_PD3_IDX0;
+  inc_a.QEI_SYSCTL_PERIPH_QEI= SYSCTL_PERIPH_QEI0;
+  inc_a.QEI_GPIO_PORT_BASE= GPIO_PORTD_BASE;
+  inc_a.QEI_BASE= QEI0_BASE;
+  inc_a.QEI_VELDIV= QEI_VELDIV_1;
+                                       
   bdc_init(motor_a);
   bdc_set_enabled(motor_a, 1);
   bdc_init(motor_b);
   bdc_set_enabled(motor_b, 1);
 
+  inc_init(inc_a);
+
   while (1)
   {
     bdc_set_velocity(motor_a, vel_a);
     bdc_set_velocity(motor_b, vel_b);
+    // inc_dir_a = inc_get_direction(inc_a);
+    // inc_vel_a = inc_get_velocity(inc_a);
+    // inc_pos_a = inc_get_position(inc_a);
+    pos_a_msg.data = inc_get_direction(inc_a);
+    inc_encoder_a.publish(&pos_a_msg);
     nh.spinOnce();
-    //nh.getHardware()->delay(100);
+    nh.getHardware()->delay(100);
   }
 }

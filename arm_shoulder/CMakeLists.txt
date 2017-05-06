@@ -16,7 +16,7 @@ add_definitions(-DRX_BUFFER_SIZE=256)
 # Generate target for TivaC
 generate_tivac_firmware(
   USB
-  SRCS arm_shoulder.cpp ../lib/bdc_motor/bdc_motor.cpp
+  SRCS arm_shoulder.cpp ../lib/bdc_motor/bdc_motor.cpp ../lib/inc_encoder/inc_encoder.cpp
   INCS . ../lib/
   BOARD tm4c123gxl
   DEVICE_SILICON TARGET_IS_TM4C123_RB2

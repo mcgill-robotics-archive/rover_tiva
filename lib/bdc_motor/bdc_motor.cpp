@@ -25,7 +25,7 @@ void bdc_init(BDC bdc) {
 	GPIOPinConfigure(bdc.GPIO_PWM_IN1);
 	GPIOPinTypePWM(bdc.GPIO_PORT_BASE_IN1, bdc.GPIO_PIN_IN1);
 	PWMGenConfigure(bdc.PWM_BASE_IN1, bdc.PWM_GEN_IN1, PWM_GEN_MODE_UP_DOWN |
-	                    PWM_GEN_MODE_NO_SYNC);
+	                PWM_GEN_MODE_NO_SYNC);
 	PWMGenPeriodSet(bdc.PWM_BASE_IN1, bdc.PWM_GEN_IN1, 4000);
 	PWMOutputState(bdc.PWM_BASE_IN1, bdc.PWM_OUT_BIT_IN1, true);
 	PWMGenEnable(bdc.PWM_BASE_IN1, bdc.PWM_GEN_IN1);
