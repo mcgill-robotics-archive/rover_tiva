@@ -53,29 +53,32 @@ volatile int32_t vel_c = 0;
 volatile uint32_t inc_pos_a = 0;
 volatile uint32_t inc_vel_a = 0;
 volatile int32_t inc_dir_a = 0;
+volatile uint32_t inc_pos_b = 0;
+volatile uint32_t inc_vel_b = 0;
+volatile int32_t inc_dir_b = 0;
 
 void vel_a_cb(const std_msgs::Int32& msg) {
   vel_a = msg.data;
 }
-
 ros::Subscriber<std_msgs::Int32> sub_a(MOTOR_A, &vel_a_cb);
 
 void vel_b_cb(const std_msgs::Int32& msg) {
   vel_b = msg.data;
 }
-
 ros::Subscriber<std_msgs::Int32> sub_b(MOTOR_B, &vel_b_cb);
 
 #ifdef ARM_WRIST
 void vel_c_cb(const std_msgs::Int32& msg) {
   vel_c = msg.data;
 }
-
 ros::Subscriber<std_msgs::Int32> sub_c("motor_claw", &vel_c_cb);
 #endif
 
 std_msgs::Int32 pos_a_msg;
 ros::Publisher inc_encoder_a(INC_ENCODER_A, &pos_a_msg);
+
+std_msgs::Int32 pos_b_msg;
+ros::Publisher inc_encoder_b(INC_ENCODER_B, &pos_b_msg);
 
 int main(void) {
   // Tiva boilerplate
@@ -199,32 +202,32 @@ int main(void) {
   #endif
 
   // Incremental Encoder A (QEI 0)
- // INC inc_a;
- // inc_a.PHA_GPIO_PIN = GPIO_PIN_0;
- // inc_a.PHB_GPIO_PIN = GPIO_PIN_1;
- // inc_a.IDX_GPIO_PIN = GPIO_PIN_4;
- // inc_a.QEI_SYSCTL_PERIPH_GPIO = SYSCTL_PERIPH_GPIOF;
- // inc_a.QEI_GPIO_P_PHA = GPIO_PF0_PHA0;
- // inc_a.QEI_GPIO_P_PHB = GPIO_PF1_PHB0;
- // inc_a.QEI_GPIO_P_IDX = GPIO_PF4_IDX0;
- // inc_a.QEI_SYSCTL_PERIPH_QEI = SYSCTL_PERIPH_QEI0;
- // inc_a.QEI_GPIO_PORT_BASE = GPIO_PORTF_BASE;
- // inc_a.QEI_BASE = QEI0_BASE;
- // inc_a.QEI_VELDIV = QEI_VELDIV_1;
-  
-
   INC inc_a;
-  inc_a.PHA_GPIO_PIN = GPIO_PIN_5;
-  inc_a.PHB_GPIO_PIN = GPIO_PIN_6;
+  inc_a.PHA_GPIO_PIN = GPIO_PIN_0;
+  inc_a.PHB_GPIO_PIN = GPIO_PIN_1;
   inc_a.IDX_GPIO_PIN = GPIO_PIN_4;
-  inc_a.QEI_SYSCTL_PERIPH_GPIO = SYSCTL_PERIPH_GPIOC;
-  inc_a.QEI_GPIO_P_PHA = GPIO_PC5_PHA1;
-  inc_a.QEI_GPIO_P_PHB = GPIO_PC6_PHB1;
-  inc_a.QEI_GPIO_P_IDX = GPIO_PC4_IDX1;
-  inc_a.QEI_SYSCTL_PERIPH_QEI = SYSCTL_PERIPH_QEI1;
-  inc_a.QEI_GPIO_PORT_BASE = GPIO_PORTC_BASE;
-  inc_a.QEI_BASE = QEI1_BASE;
+  inc_a.QEI_SYSCTL_PERIPH_GPIO = SYSCTL_PERIPH_GPIOF;
+  inc_a.QEI_GPIO_P_PHA = GPIO_PF0_PHA0;
+  inc_a.QEI_GPIO_P_PHB = GPIO_PF1_PHB0;
+  inc_a.QEI_GPIO_P_IDX = GPIO_PF4_IDX0;
+  inc_a.QEI_SYSCTL_PERIPH_QEI = SYSCTL_PERIPH_QEI0;
+  inc_a.QEI_GPIO_PORT_BASE = GPIO_PORTF_BASE;
+  inc_a.QEI_BASE = QEI0_BASE;
   inc_a.QEI_VELDIV = QEI_VELDIV_1;
+
+  // Incremental Encoder B (QEI 1)
+  INC inc_b;
+  inc_b.PHA_GPIO_PIN = GPIO_PIN_5;
+  inc_b.PHB_GPIO_PIN = GPIO_PIN_6;
+  inc_b.IDX_GPIO_PIN = GPIO_PIN_4;
+  inc_b.QEI_SYSCTL_PERIPH_GPIO = SYSCTL_PERIPH_GPIOC;
+  inc_b.QEI_GPIO_P_PHA = GPIO_PC5_PHA1;
+  inc_b.QEI_GPIO_P_PHB = GPIO_PC6_PHB1;
+  inc_b.QEI_GPIO_P_IDX = GPIO_PC4_IDX1;
+  inc_b.QEI_SYSCTL_PERIPH_QEI = SYSCTL_PERIPH_QEI1;
+  inc_b.QEI_GPIO_PORT_BASE = GPIO_PORTC_BASE;
+  inc_b.QEI_BASE = QEI1_BASE;
+  inc_b.QEI_VELDIV = QEI_VELDIV_1;
 
   bdc_init(motor_a);
   bdc_set_enabled(motor_a, 1);
@@ -237,19 +240,22 @@ int main(void) {
   #endif
 
   inc_init(inc_a);
+  inc_init(inc_b);
 
   while (1)
   {
     bdc_set_velocity(motor_a, vel_a);
     bdc_set_velocity(motor_b, vel_b);
-#ifdef ARM_WRIST
+    #ifdef ARM_WRIST
     bdc_set_velocity(motor_c, vel_c);
-#endif
+    #endif
     // inc_dir_a = inc_get_direction(inc_a);
     // inc_vel_a = inc_get_velocity(inc_a);
     // inc_pos_a = inc_get_position(inc_a);
-    pos_a_msg.data = inc_get_velocity(inc_a);
+    pos_a_msg.data = inc_get_position(inc_a);
     inc_encoder_a.publish(&pos_a_msg);
+    pos_b_msg.data = inc_get_position(inc_b);
+    inc_encoder_b.publish(&pos_b_msg);
     nh.spinOnce();
     nh.getHardware()->delay(100);
   }
