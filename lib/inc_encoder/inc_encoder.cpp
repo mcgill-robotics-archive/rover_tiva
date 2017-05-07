@@ -13,6 +13,12 @@ void inc_init (INC cui) {
         HWREG(GPIO_PORTD_BASE + GPIO_O_LOCK) = 0;
     }
 
+    if(cui.QEI_GPIO_PORT_BASE == GPIO_PORTF_BASE) {
+        HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = GPIO_LOCK_KEY;
+        HWREG(GPIO_PORTF_BASE + GPIO_O_CR) |= 0x01;
+        HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = 0;
+    }
+
     GPIOPinConfigure(cui.QEI_GPIO_P_PHA | cui.QEI_GPIO_P_PHB | cui.QEI_GPIO_P_IDX);
     GPIOPinTypeQEI(cui.QEI_GPIO_PORT_BASE, cui.PHA_GPIO_PIN | cui.PHB_GPIO_PIN | cui.IDX_GPIO_PIN);
     QEIDisable(cui.QEI_BASE);

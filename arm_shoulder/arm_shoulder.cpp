@@ -164,19 +164,34 @@ int main(void) {
   motor_c.ADC_BASE_CS = ADC0_BASE;
   motor_c.ADC_CTL_CH_CS = ADC_CTL_CH8;
 
+  // Incremental Encoder A (QEI 0)
+ // INC inc_a;
+ // inc_a.PHA_GPIO_PIN = GPIO_PIN_0;
+ // inc_a.PHB_GPIO_PIN = GPIO_PIN_1;
+ // inc_a.IDX_GPIO_PIN = GPIO_PIN_4;
+ // inc_a.QEI_SYSCTL_PERIPH_GPIO = SYSCTL_PERIPH_GPIOF;
+ // inc_a.QEI_GPIO_P_PHA = GPIO_PF0_PHA0;
+ // inc_a.QEI_GPIO_P_PHB = GPIO_PF1_PHB0;
+ // inc_a.QEI_GPIO_P_IDX = GPIO_PF4_IDX0;
+ // inc_a.QEI_SYSCTL_PERIPH_QEI = SYSCTL_PERIPH_QEI0;
+ // inc_a.QEI_GPIO_PORT_BASE = GPIO_PORTF_BASE;
+ // inc_a.QEI_BASE = QEI0_BASE;
+ // inc_a.QEI_VELDIV = QEI_VELDIV_1;
+  
+
   INC inc_a;
-  inc_a.PHA_GPIO_PIN= GPIO_PIN_6;
-  inc_a.PHB_GPIO_PIN= GPIO_PIN_7;
-  inc_a.IDX_GPIO_PIN= GPIO_PIN_3;
-  inc_a.QEI_SYSCTL_PERIPH_GPIO= SYSCTL_PERIPH_GPIOD;
-  inc_a.QEI_GPIO_P_PHA= GPIO_PD6_PHA0;
-  inc_a.QEI_GPIO_P_PHB= GPIO_PD7_PHB0;
-  inc_a.QEI_GPIO_P_IDX= GPIO_PD3_IDX0;
-  inc_a.QEI_SYSCTL_PERIPH_QEI= SYSCTL_PERIPH_QEI0;
-  inc_a.QEI_GPIO_PORT_BASE= GPIO_PORTD_BASE;
-  inc_a.QEI_BASE= QEI0_BASE;
-  inc_a.QEI_VELDIV= QEI_VELDIV_1;
-                                       
+  inc_a.PHA_GPIO_PIN = GPIO_PIN_5;
+  inc_a.PHB_GPIO_PIN = GPIO_PIN_6;
+  inc_a.IDX_GPIO_PIN = GPIO_PIN_4;
+  inc_a.QEI_SYSCTL_PERIPH_GPIO = SYSCTL_PERIPH_GPIOC;
+  inc_a.QEI_GPIO_P_PHA = GPIO_PC5_PHA1;
+  inc_a.QEI_GPIO_P_PHB = GPIO_PC6_PHB1;
+  inc_a.QEI_GPIO_P_IDX = GPIO_PC4_IDX1;
+  inc_a.QEI_SYSCTL_PERIPH_QEI = SYSCTL_PERIPH_QEI1;
+  inc_a.QEI_GPIO_PORT_BASE = GPIO_PORTC_BASE;
+  inc_a.QEI_BASE = QEI1_BASE;
+  inc_a.QEI_VELDIV = QEI_VELDIV_1;
+
   bdc_init(motor_a);
   bdc_set_enabled(motor_a, 1);
   bdc_init(motor_b);
@@ -191,7 +206,7 @@ int main(void) {
     // inc_dir_a = inc_get_direction(inc_a);
     // inc_vel_a = inc_get_velocity(inc_a);
     // inc_pos_a = inc_get_position(inc_a);
-    pos_a_msg.data = inc_get_direction(inc_a);
+    pos_a_msg.data = inc_get_velocity(inc_a);
     inc_encoder_a.publish(&pos_a_msg);
     nh.spinOnce();
     nh.getHardware()->delay(100);
