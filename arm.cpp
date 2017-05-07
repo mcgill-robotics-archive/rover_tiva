@@ -74,11 +74,11 @@ void vel_c_cb(const std_msgs::Int32& msg) {
 ros::Subscriber<std_msgs::Int32> sub_c("motor_claw", &vel_c_cb);
 #endif
 
-std_msgs::Int32 pos_a_msg;
-ros::Publisher inc_encoder_a(INC_ENCODER_A, &pos_a_msg);
+std_msgs::Int32 inc_a_msg;
+ros::Publisher inc_encoder_a(INC_ENCODER_A, &inc_a_msg);
 
-std_msgs::Int32 pos_b_msg;
-ros::Publisher inc_encoder_b(INC_ENCODER_B, &pos_b_msg);
+std_msgs::Int32 inc_b_msg;
+ros::Publisher inc_encoder_b(INC_ENCODER_B, &inc_b_msg);
 
 int main(void) {
   // Tiva boilerplate
@@ -257,10 +257,10 @@ int main(void) {
     // inc_dir_a = inc_get_direction(inc_a);
     // inc_vel_a = inc_get_velocity(inc_a);
     // inc_pos_a = inc_get_position(inc_a);
-    pos_a_msg.data = inc_get_position(inc_a);
-    inc_encoder_a.publish(&pos_a_msg);
-    pos_b_msg.data = inc_get_position(inc_b);
-    inc_encoder_b.publish(&pos_b_msg);
+    inc_a_msg.data = inc_get_direction(inc_a);
+    inc_encoder_a.publish(&inc_a_msg);
+    inc_b_msg.data = inc_get_direction(inc_b);
+    inc_encoder_b.publish(&inc_b_msg);
     nh.spinOnce();
     nh.getHardware()->delay(100);
   }
