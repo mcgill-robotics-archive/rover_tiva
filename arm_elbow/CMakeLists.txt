@@ -9,11 +9,13 @@ add_definitions(-DROSSERIAL_BAUDRATE=57600)
 add_definitions(-DTX_BUFFER_SIZE=256)
 add_definitions(-DRX_BUFFER_SIZE=256)
 
+add_definitions(-DARM_ELBOW)
+
 # Generate target for TivaC
 generate_tivac_firmware(
   USB
-  SRCS arm_elbow.cpp
-  INCS .
+  SRCS arm_elbow.cpp ../lib/bdc_motor/bdc_motor.cpp ../lib/inc_encoder/inc_encoder.cpp
+  INCS . ../lib
   BOARD tm4c123gxl
   DEVICE_SILICON TARGET_IS_TM4C123_RB2
 )

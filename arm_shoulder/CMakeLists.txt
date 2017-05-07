@@ -4,14 +4,12 @@ project(arm_shoulder)
 # Include rosserial libraries for TivaC
 include_directories(${ROS_LIB_DIR})
 
-#include_directories(../lib/bdc_motor/)
-# add_library(bdc_motor STATIC bdc_motor.cpp)
-# target_link_libraries(arm_shoulder bdc_motor)
-
 # Per project based definitions and options
 add_definitions(-DROSSERIAL_BAUDRATE=57600)
 add_definitions(-DTX_BUFFER_SIZE=256)
 add_definitions(-DRX_BUFFER_SIZE=256)
+
+add_definitions(-DARM_SHOULDER)
 
 # Generate target for TivaC
 generate_tivac_firmware(

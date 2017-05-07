@@ -13,23 +13,36 @@ rosserial_generate_ros_lib(
   SCRIPT make_libraries_tiva
 )
 
-# Chatter tutorial
 rosserial_configure_client(
-  DIRECTORY arm_shoulder #arm_elbow arm_wrist drive_left drive_middle drive_right
+  DIRECTORY arm_shoulder
   TOOLCHAIN_FILE ${ROSSERIAL_TIVAC_TOOLCHAIN}
 )
+
 rosserial_add_client_target(arm_shoulder arm_shoulder.axf ALL)
 rosserial_add_client_target(arm_shoulder flash)
 rosserial_add_client_target(arm_shoulder size)
 rosserial_add_client_target(arm_shoulder dump)
-# rosserial_add_client_target(arm_elbow arm_elbow.axf ALL)
-# rosserial_add_client_target(arm_elbow flash)
-# rosserial_add_client_target(arm_elbow size)
-# rosserial_add_client_target(arm_elbow dump)
-# rosserial_add_client_target(arm_wrist arm_wrist.axf ALL)
-# rosserial_add_client_target(arm_wrist flash)
-# rosserial_add_client_target(arm_wrist size)
-# rosserial_add_client_target(arm_wrist dump)
+
+rosserial_configure_client(
+  DIRECTORY arm_elbow
+  TOOLCHAIN_FILE ${ROSSERIAL_TIVAC_TOOLCHAIN}
+)
+
+rosserial_add_client_target(arm_elbow arm_elbow.axf ALL)
+rosserial_add_client_target(arm_elbow flash)
+rosserial_add_client_target(arm_elbow size)
+rosserial_add_client_target(arm_elbow dump)
+
+rosserial_configure_client(
+  DIRECTORY arm_wrist
+  TOOLCHAIN_FILE ${ROSSERIAL_TIVAC_TOOLCHAIN}
+)
+
+rosserial_add_client_target(arm_wrist arm_wrist.axf ALL)
+rosserial_add_client_target(arm_wrist flash)
+rosserial_add_client_target(arm_wrist size)
+rosserial_add_client_target(arm_wrist dump)
+
 # rosserial_add_client_target(drive_left drive_left.axf ALL)
 # rosserial_add_client_target(drive_left flash)
 # rosserial_add_client_target(drive_left size)
