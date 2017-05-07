@@ -85,11 +85,16 @@ int main(void) {
   MAP_FPUEnable();
   MAP_FPULazyStackingEnable();
   MAP_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ | SYSCTL_OSC_MAIN);
+
   // Rosserial boilerplate
   nh.initNode();
   nh.subscribe(sub_a);
   nh.subscribe(sub_b);
+  #ifdef ARM_WRIST
+  nh.subscribe(sub_b);
+  #endif
   nh.advertise(inc_encoder_a);
+  nh.advertise(inc_encoder_b);
 
   // Motor initialization
   BDC motor_a; 
