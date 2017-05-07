@@ -19,13 +19,16 @@ void inc_init (INC cui) {
         HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = 0;
     }
 
-    GPIOPinConfigure(cui.QEI_GPIO_P_PHA | cui.QEI_GPIO_P_PHB | cui.QEI_GPIO_P_IDX);
+    GPIOPinConfigure(cui.QEI_GPIO_P_PHA);
+    GPIOPinConfigure(cui.QEI_GPIO_P_PHB);
+    GPIOPinConfigure(cui.QEI_GPIO_P_IDX);
     GPIOPinTypeQEI(cui.QEI_GPIO_PORT_BASE, cui.PHA_GPIO_PIN | cui.PHB_GPIO_PIN | cui.IDX_GPIO_PIN);
+    
     QEIDisable(cui.QEI_BASE);
     QEIVelocityDisable(cui.QEI_BASE);
     QEIIntDisable(cui.QEI_BASE, (QEI_INTERROR | QEI_INTDIR | QEI_INTTIMER | QEI_INTINDEX));
     
-    QEIConfigure(cui.QEI_BASE, (QEI_CONFIG_CAPTURE_A_B | QEI_CONFIG_RESET_IDX | QEI_CONFIG_QUADRATURE | QEI_CONFIG_NO_SWAP), 3999);
+    QEIConfigure(cui.QEI_BASE, (QEI_CONFIG_CAPTURE_A_B | QEI_CONFIG_NO_RESET | QEI_CONFIG_QUADRATURE | QEI_CONFIG_NO_SWAP), 3999);
     QEIVelocityConfigure(cui.QEI_BASE, cui.QEI_VELDIV, 400000);
     QEIPositionSet(cui.QEI_BASE, 0);
 
@@ -37,7 +40,7 @@ int32_t inc_get_direction(INC cui) {
     int32_t i32QEIDirection = QEIDirectionGet(cui.QEI_BASE);
     return i32QEIDirection;
 }
-uint32_t inc_get_velocity(INC cui) {
+int32_t inc_get_velocity(INC cui) {
     uint32_t ui32QEIVelocity = QEIVelocityGet(cui.QEI_BASE);
     return ui32QEIVelocity;
 }

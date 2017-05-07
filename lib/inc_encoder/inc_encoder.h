@@ -23,7 +23,7 @@ typedef struct INCs {
 void inc_init(INC cui);
 //Read encoder values
 int32_t inc_get_direction(INC cui);
-uint32_t inc_get_velocity(INC cui);
+int32_t inc_get_velocity(INC cui);
 uint32_t inc_get_position(INC cui);
 
 #endif //__INC_ENCODER_H_
