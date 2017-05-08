@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="rosserial_python" type="serial_node.py" name="arm0" args="/dev/ttyACM0" output="screen" respawn="true" />
+    <node pkg="rosserial_python" type="serial_node.py" name="arm1" args="/dev/ttyACM1" output="screen" respawn="true" />
+    <node pkg="rosserial_python" type="serial_node.py" name="arm2" args="/dev/ttyACM2" output="screen" respawn="true" />
+</launch>

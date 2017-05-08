@@ -91,7 +91,7 @@ int main(void) {
   nh.subscribe(sub_a);
   nh.subscribe(sub_b);
   #ifdef ARM_WRIST
-  nh.subscribe(sub_b);
+  nh.subscribe(sub_c);
   #endif
   nh.advertise(inc_encoder_a);
   nh.advertise(inc_encoder_b);
@@ -257,11 +257,11 @@ int main(void) {
     // inc_dir_a = inc_get_direction(inc_a);
     // inc_vel_a = inc_get_velocity(inc_a);
     // inc_pos_a = inc_get_position(inc_a);
-    inc_a_msg.data = inc_get_direction(inc_a);
+    inc_a_msg.data = inc_get_position(inc_a);
     inc_encoder_a.publish(&inc_a_msg);
-    inc_b_msg.data = inc_get_direction(inc_b);
+    inc_b_msg.data = inc_get_position(inc_b);
     inc_encoder_b.publish(&inc_b_msg);
     nh.spinOnce();
-    nh.getHardware()->delay(100);
+    nh.getHardware()->delay(10);
   }
 }
