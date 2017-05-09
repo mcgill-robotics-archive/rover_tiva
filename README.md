@@ -1,9 +1,12 @@
 # Rover Tiva Microcontroller Code Submodule
 
-## Setup and Running Instructions
+## Setup Instructions
 
 - Copy `71-rover-tiva.rules` to `/etc/udev/rules.d/`
 - Edit `launch/tiva.launch` to reflect the number of Tiva's connected
+
+## Running Instructions 
+- Make sure `launch/tiva.launch` reflects the number of Tiva's connected
 - `roscd` and run `roslaunch rover_tiva tiva.launch`
 - Subscribe/publish to appropriate topics
 
