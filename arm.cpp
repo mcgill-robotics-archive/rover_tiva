@@ -71,7 +71,7 @@ ros::Subscriber<std_msgs::Int32> sub_b(MOTOR_B, &vel_b_cb);
 void vel_c_cb(const std_msgs::Int32& msg) {
   vel_c = msg.data;
 }
-ros::Subscriber<std_msgs::Int32> sub_c("motor_claw", &vel_c_cb);
+ros::Subscriber<std_msgs::Int32> sub_c("motor_wrist_claw", &vel_c_cb);
 #endif
 
 std_msgs::Int32 inc_a_msg;
