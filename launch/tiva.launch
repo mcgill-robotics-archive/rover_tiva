@@ -1,5 +1,0 @@
-<launch>
-    <node pkg="rosserial_python" type="serial_node.py" name="tiva0" args="/dev/tiva0" output="screen" respawn="true" />
-    <node pkg="rosserial_python" type="serial_node.py" name="tiva1" args="/dev/tiva1" output="screen" respawn="true" />
-    <node pkg="rosserial_python" type="serial_node.py" name="tiva2" args="/dev/tiva2" output="screen" respawn="true" />
-</launch>

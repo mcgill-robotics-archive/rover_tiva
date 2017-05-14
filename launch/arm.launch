@@ -1,0 +1,5 @@
+<launch>
+    <node pkg="rosserial_python" type="serial_node.py" name="arm_shoulder" args="/dev/arm_shoulder" output="screen" respawn="true" />
+    <node pkg="rosserial_python" type="serial_node.py" name="arm_elbow" args="/dev/arm_elbow" output="screen" respawn="true" />
+    <node pkg="rosserial_python" type="serial_node.py" name="arm_wrist" args="/dev/arm_wrist" output="screen" respawn="true" />
+</launch>
