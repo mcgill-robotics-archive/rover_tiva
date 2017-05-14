@@ -37,3 +37,4 @@ You should be able to do all that by looking at the code for the other Tivas
 - If you want to manually blank a Tiva, you can run `lm4flash /dev/null`
 - If you look in your kernel logs (`dmesg -wH`) you'll see that one of the USB ports on the backplane is reporting an overcurrent condition. This is normal, I just forgot to pull down the overcurrent pin on thehub's unused USB port
 - Tivas with no serial number specified will be given the serial number `00000000`. The last udev rule in `71-rover-tiva.rules` will give those Tivas the symlink `tiva%n` where `%n` is an integer chosen by your computer
+- Relevant page about the Tivas' VID and PID. Hopefully we will get registered in Ubuntu's USB ID database: https://github.com/mcgill-robotics/electrical/wiki/McGill-Robotics-USB-PID-for-TM4C-Microcontrollers
