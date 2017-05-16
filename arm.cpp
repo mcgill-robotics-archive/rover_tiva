@@ -1,6 +1,7 @@
 #ifdef ARM_SHOULDER
 #define MOTOR_A "motor_shoulder_a"
 #define MOTOR_B "motor_shoulder_b"
+#define MOTOR_RESET "motor_shoulder_reset"
 #define INC_ENCODER_A "inc_shoulder_a"
 #define INC_ENCODER_B "inc_shoulder_b"
 #endif
@@ -8,6 +9,7 @@
 #ifdef ARM_ELBOW
 #define MOTOR_A "motor_elbow_a"
 #define MOTOR_B "motor_elbow_b"
+#define MOTOR_RESET "motor_elbow_reset"
 #define INC_ENCODER_A "inc_elbow_a"
 #define INC_ENCODER_B "inc_elbow_b"
 #endif
@@ -15,6 +17,7 @@
 #ifdef ARM_WRIST
 #define MOTOR_A "motor_wrist_a"
 #define MOTOR_B "motor_wrist_b"
+#define MOTOR_RESET "motor_wrist_reset"
 #define INC_ENCODER_A "inc_wrist_a"
 #define INC_ENCODER_B "inc_wrist_b"
 #endif
@@ -30,6 +33,7 @@
 // ROS includes
 #include <ros.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/Bool.h>
 
 // TivaC specific includes
 extern "C"
@@ -57,6 +61,8 @@ volatile uint32_t inc_pos_b = 0;
 volatile uint32_t inc_vel_b = 0;
 volatile int32_t inc_dir_b = 0;
 
+bool reset_flag = false;
+
 void vel_a_cb(const std_msgs::Int32& msg) {
   vel_a = msg.data;
 }
@@ -73,6 +79,12 @@ void vel_c_cb(const std_msgs::Int32& msg) {
 }
 ros::Subscriber<std_msgs::Int32> sub_c("motor_wrist_claw", &vel_c_cb);
 #endif
+
+void reset_cb(const std_msgs::Bool& status){
+  reset_flag = status.data;
+}
+
+ros::Subscriber<std_msgs::Bool> sub_reset(MOTOR_RESET, &reset_cb);
 
 std_msgs::Int32 inc_a_msg;
 ros::Publisher inc_encoder_a(INC_ENCODER_A, &inc_a_msg);
@@ -97,7 +109,7 @@ int main(void) {
   nh.advertise(inc_encoder_b);
 
   // Motor initialization
-  BDC motor_a; 
+  BDC motor_a;
   // IN1 - Speed Output PB4
   motor_a.SYSCTL_PERIPH_PWM_IN1 = SYSCTL_PERIPH_PWM0;
   motor_a.SYSCTL_PERIPH_GPIO_IN1 = SYSCTL_PERIPH_GPIOB;
@@ -133,7 +145,7 @@ int main(void) {
   motor_a.ADC_CTL_CH_CS = ADC_CTL_CH3;
 
   // Motor initialization
-  BDC motor_b; 
+  BDC motor_b;
   // IN1 - Speed Output PB6
   motor_b.SYSCTL_PERIPH_PWM_IN1 = SYSCTL_PERIPH_PWM0;
   motor_b.SYSCTL_PERIPH_GPIO_IN1 = SYSCTL_PERIPH_GPIOB;
@@ -170,7 +182,7 @@ int main(void) {
 
   #ifdef ARM_WRIST
   // Motor initialization
-  BDC motor_c; 
+  BDC motor_c;
   // IN1 - Speed Output PA6
   motor_c.SYSCTL_PERIPH_PWM_IN1 = SYSCTL_PERIPH_PWM1;
   motor_c.SYSCTL_PERIPH_GPIO_IN1 = SYSCTL_PERIPH_GPIOA;
@@ -238,7 +250,7 @@ int main(void) {
   bdc_set_enabled(motor_a, 1);
   bdc_init(motor_b);
   bdc_set_enabled(motor_b, 1);
-  
+
   #ifdef ARM_WRIST
   bdc_init(motor_c);
   bdc_set_enabled(motor_c, 1);
@@ -249,11 +261,30 @@ int main(void) {
 
   while (1)
   {
-    bdc_set_velocity(motor_a, vel_a);
-    bdc_set_velocity(motor_b, vel_b);
-    #ifdef ARM_WRIST
-    bdc_set_velocity(motor_c, vel_c);
-    #endif
+
+    if(reset_flag){
+      nh.loginfo("reset");
+      bdc_set_enabled(motor_a, 0);
+      bdc_set_enabled(motor_b, 0);
+#ifdef ARM_WRIST
+      bdc_set_enabled(motor_c, 0);
+#endif
+      nh.getHardware()->delay(20);
+      bdc_set_enabled(motor_a, 1);
+      bdc_set_enabled(motor_b, 1);
+#ifdef ARM_WRIST
+      bdc_set_enabled(motor_c, 1);
+#endif
+    }
+    else{
+      bdc_set_velocity(motor_a, vel_a);
+      bdc_set_velocity(motor_b, vel_b);
+#ifdef ARM_WRIST
+      bdc_set_velocity(motor_c, vel_c);
+#endif
+    }
+
+
     // inc_dir_a = inc_get_direction(inc_a);
     // inc_vel_a = inc_get_velocity(inc_a);
     // inc_pos_a = inc_get_position(inc_a);
