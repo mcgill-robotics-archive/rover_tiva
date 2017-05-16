@@ -275,6 +275,7 @@ int main(void) {
 #ifdef ARM_WRIST
       bdc_set_enabled(motor_c, 1);
 #endif
+      reset_flag = false;
     }
     else{
       bdc_set_velocity(motor_a, vel_a);
