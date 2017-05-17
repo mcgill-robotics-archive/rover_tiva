@@ -39,8 +39,8 @@ bool reset_cb(const rover_tiva::ResetMotorRequest& request, rover_tiva::ResetMot
 
 int main(int argc, char **argv)
 {
-  ros::init(argc, argv, "motor_reset_server");
+  ros::init(argc, argv, "arm_motor_reset_server");
   ros::NodeHandle nh;
-  ros::ServiceServer service = nh.advertiseService<rover_tiva::ResetMotorRequest, rover_tiva::ResetMotorResponse>("motor_reset", &reset_cb);
+  ros::ServiceServer service = nh.advertiseService<rover_tiva::ResetMotorRequest, rover_tiva::ResetMotorResponse>("arm_motor_reset_server", &reset_cb);
   ros::spin();
 }
