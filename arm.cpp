@@ -269,7 +269,7 @@ int main(void) {
 #ifdef ARM_WRIST
       bdc_set_enabled(motor_c, 0);
 #endif
-      nh.getHardware()->delay(20);
+      nh.getHardware()->delay(500);
       bdc_set_enabled(motor_a, 1);
       bdc_set_enabled(motor_b, 1);
 #ifdef ARM_WRIST
