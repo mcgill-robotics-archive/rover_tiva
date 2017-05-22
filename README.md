@@ -12,6 +12,9 @@
   - `inc_shoulder_a`: Subscribe to incremental encoder readings from these topics
   - `abs_shoulder_a`: Subscribe to absolute encoder readings from these topics
 
+## Reset Motors
+- Running the launch file will now also start up a reset server on /arm_motor_reset_server. In order to reset a joint (resets all motors at that joint), run `rosservice call /arm_motor_reset_server "motor_shoulder_reset"`, or whichever joint you care to reset (other options are `"motor_elbow_reset"` and `"motor_wrist_reset"`).
+
 ## Flashing Instructions
 
 - Connect a Tiva Launchpad's JTAG pins (`TCK`, `TMS`, `TDI`, `TDO`, `GND`) to the custom Tiva's header. Be sure to disconnect the `VDD` jumper on the Launchpad.
