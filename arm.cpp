@@ -2,6 +2,7 @@
 #define MOTOR_A "motor_shoulder_a"
 #define MOTOR_B "motor_shoulder_b"
 #define MOTOR_RESET "motor_shoulder_reset"
+#define MOTOR_BRAKE "motor_shoulder_brake"
 #define INC_ENCODER_A "inc_shoulder_a"
 #define INC_ENCODER_B "inc_shoulder_b"
 #endif
@@ -10,6 +11,7 @@
 #define MOTOR_A "motor_elbow_a"
 #define MOTOR_B "motor_elbow_b"
 #define MOTOR_RESET "motor_elbow_reset"
+#define MOTOR_BRAKE "motor_elbow_brake"
 #define INC_ENCODER_A "inc_elbow_a"
 #define INC_ENCODER_B "inc_elbow_b"
 #endif
@@ -18,6 +20,7 @@
 #define MOTOR_A "motor_wrist_a"
 #define MOTOR_B "motor_wrist_b"
 #define MOTOR_RESET "motor_wrist_reset"
+#define MOTOR_BRAKE "motor_wrist_brake"
 #define INC_ENCODER_A "inc_wrist_a"
 #define INC_ENCODER_B "inc_wrist_b"
 #endif
@@ -38,10 +41,10 @@
 // TivaC specific includes
 extern "C"
 {
-  #include <driverlib/sysctl.h>
-  #include <driverlib/gpio.h>
-  #include <driverlib/pwm.h>
-  #include "inc/hw_memmap.h"
+#include <driverlib/sysctl.h>
+#include <driverlib/gpio.h>
+#include <driverlib/pwm.h>
+#include "inc/hw_memmap.h"
 }
 
 
@@ -62,6 +65,7 @@ volatile uint32_t inc_vel_b = 0;
 volatile int32_t inc_dir_b = 0;
 
 bool reset_flag = false;
+bool brake_flag = false;
 
 void vel_a_cb(const std_msgs::Int32& msg) {
   vel_a = msg.data;
@@ -80,11 +84,21 @@ void vel_c_cb(const std_msgs::Int32& msg) {
 ros::Subscriber<std_msgs::Int32> sub_c("motor_wrist_claw", &vel_c_cb);
 #endif
 
+
+// Reset Subscriber
 void reset_cb(const std_msgs::Bool& status){
   reset_flag = status.data;
 }
 
 ros::Subscriber<std_msgs::Bool> sub_reset(MOTOR_RESET, &reset_cb);
+
+// Brake Subscriber
+void brake_cb(const std_msgs::Bool& status){
+  brake_flag = status.data;
+
+}
+
+ros::Subscriber<std_msgs::Bool> sub_brake(MOTOR_BRAKE, &brake_cb);
 
 std_msgs::Int32 inc_a_msg;
 ros::Publisher inc_encoder_a(INC_ENCODER_A, &inc_a_msg);
@@ -102,9 +116,9 @@ int main(void) {
   nh.initNode();
   nh.subscribe(sub_a);
   nh.subscribe(sub_b);
-  #ifdef ARM_WRIST
+#ifdef ARM_WRIST
   nh.subscribe(sub_c);
-  #endif
+#endif
   nh.advertise(inc_encoder_a);
   nh.advertise(inc_encoder_b);
 
@@ -180,7 +194,7 @@ int main(void) {
   motor_b.ADC_BASE_CS = ADC0_BASE;
   motor_b.ADC_CTL_CH_CS = ADC_CTL_CH2;
 
-  #ifdef ARM_WRIST
+#ifdef ARM_WRIST
   // Motor initialization
   BDC motor_c;
   // IN1 - Speed Output PA6
@@ -216,7 +230,7 @@ int main(void) {
   motor_c.GPIO_PIN_CS = GPIO_PIN_5;
   motor_c.ADC_BASE_CS = ADC0_BASE;
   motor_c.ADC_CTL_CH_CS = ADC_CTL_CH8;
-  #endif
+#endif
 
   // Incremental Encoder A (QEI 0)
   INC inc_a;
@@ -251,49 +265,65 @@ int main(void) {
   bdc_init(motor_b);
   bdc_set_enabled(motor_b, 1);
 
-  #ifdef ARM_WRIST
+#ifdef ARM_WRIST
   bdc_init(motor_c);
   bdc_set_enabled(motor_c, 1);
-  #endif
+#endif
 
   inc_init(inc_a);
   inc_init(inc_b);
 
   while (1)
-  {
+    {
+      // Brake Enable/Disable
+      bdc_set_brake(motor_a, brake_flag);
+      bdc_set_brake(motor_b, brake_flag);
+#ifdef ARM_WRIST
+      bdc_set_brake(motor_c, brake_flag);
+#endif
+      if(brake_flag){
+        bdc_set_velocity(motor_a, 0);
+        bdc_set_velocity(motor_b, 0);
+#ifdef ARM_WRIST
+        bdc_set_velocity(motor_c, 0);
+#endif
+        nh.getHardware()->delay(100);
+      }
 
-    if(reset_flag){
-      nh.loginfo("reset");
-      bdc_set_enabled(motor_a, 0);
-      bdc_set_enabled(motor_b, 0);
+      // Check for Reset
+      else if(reset_flag){
+        nh.loginfo("reset");
+        bdc_set_enabled(motor_a, 0);
+        bdc_set_enabled(motor_b, 0);
 #ifdef ARM_WRIST
-      bdc_set_enabled(motor_c, 0);
+        bdc_set_enabled(motor_c, 0);
 #endif
-      nh.getHardware()->delay(500);
-      bdc_set_enabled(motor_a, 1);
-      bdc_set_enabled(motor_b, 1);
+        nh.getHardware()->delay(500);
+        bdc_set_enabled(motor_a, 1);
+        bdc_set_enabled(motor_b, 1);
 #ifdef ARM_WRIST
-      bdc_set_enabled(motor_c, 1);
+        bdc_set_enabled(motor_c, 1);
 #endif
-      reset_flag = false;
+        reset_flag = false;
+      }
+
+      else{
+        bdc_set_velocity(motor_a, vel_a);
+        bdc_set_velocity(motor_b, vel_b);
+#ifdef ARM_WRIST
+        bdc_set_velocity(motor_c, vel_c);
+#endif
+      }
+
+
+      // inc_dir_a = inc_get_direction(inc_a);
+      // inc_vel_a = inc_get_velocity(inc_a);
+      // inc_pos_a = inc_get_position(inc_a);
+      inc_a_msg.data = inc_get_position(inc_a);
+      inc_encoder_a.publish(&inc_a_msg);
+      inc_b_msg.data = inc_get_position(inc_b);
+      inc_encoder_b.publish(&inc_b_msg);
+      nh.spinOnce();
+      nh.getHardware()->delay(10);
     }
-    else{
-      bdc_set_velocity(motor_a, vel_a);
-      bdc_set_velocity(motor_b, vel_b);
-#ifdef ARM_WRIST
-      bdc_set_velocity(motor_c, vel_c);
-#endif
-    }
-
-
-    // inc_dir_a = inc_get_direction(inc_a);
-    // inc_vel_a = inc_get_velocity(inc_a);
-    // inc_pos_a = inc_get_position(inc_a);
-    inc_a_msg.data = inc_get_position(inc_a);
-    inc_encoder_a.publish(&inc_a_msg);
-    inc_b_msg.data = inc_get_position(inc_b);
-    inc_encoder_b.publish(&inc_b_msg);
-    nh.spinOnce();
-    nh.getHardware()->delay(10);
-  }
 }

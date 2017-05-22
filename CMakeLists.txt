@@ -10,7 +10,9 @@ find_package(catkin REQUIRED COMPONENTS
   genmsg
 )
 
-add_service_files(DIRECTORY srv FILES ResetMotor.srv)
+add_service_files(
+  DIRECTORY srv
+  FILES ResetMotor.srv BrakeMotor.srv)
 
 
 rosserial_generate_ros_lib(
@@ -18,10 +20,6 @@ rosserial_generate_ros_lib(
   SCRIPT make_libraries_tiva
 )
 
-rosserial_configure_client(
-  DIRECTORY arm_shoulder
-  TOOLCHAIN_FILE ${ROSSERIAL_TIVAC_TOOLCHAIN}
-)
 
 generate_messages(DEPENDENCIES std_msgs)
 
@@ -32,6 +30,17 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 add_executable(reset_motor_service reset_motor_service.cpp)
 target_link_libraries(reset_motor_service ${catkin_LIBRARIES})
 add_dependencies(reset_motor_service rover_tiva_generate_messages_cp)
+
+add_executable(brake_motor_service brake_motor_service.cpp)
+target_link_libraries(brake_motor_service ${catkin_LIBRARIES})
+add_dependencies(brake_motor_service rover_tiva_generate_messages_cp)
+
+
+
+rosserial_configure_client(
+  DIRECTORY arm_shoulder
+  TOOLCHAIN_FILE ${ROSSERIAL_TIVAC_TOOLCHAIN}
+)
 
 rosserial_add_client_target(arm_shoulder arm_shoulder.axf ALL)
 rosserial_add_client_target(arm_shoulder flash)
