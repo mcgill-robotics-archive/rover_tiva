@@ -111,7 +111,11 @@ const uint8_t g_pui8SerialNumberString[] =
     #ifdef ARM_WRIST
     '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '3', 0
     #else
+    #ifdef SAMPLING
+    '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '4', 0
+    #else
     '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0, '0', 0
+    #endif
     #endif
     #endif
     #endif

@@ -58,6 +58,16 @@ rosserial_add_client_target(arm_wrist flash)
 rosserial_add_client_target(arm_wrist size)
 rosserial_add_client_target(arm_wrist dump)
 
+rosserial_configure_client(
+  DIRECTORY sampling
+  TOOLCHAIN_FILE ${ROSSERIAL_TIVAC_TOOLCHAIN}
+)
+
+ rosserial_add_client_target(sampling sampling.axf ALL)
+ rosserial_add_client_target(sampling flash)
+ rosserial_add_client_target(sampling size)
+ rosserial_add_client_target(sampling dump)
+
 # rosserial_add_client_target(drive_left drive_left.axf ALL)
 # rosserial_add_client_target(drive_left flash)
 # rosserial_add_client_target(drive_left size)
