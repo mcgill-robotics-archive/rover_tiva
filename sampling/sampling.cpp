@@ -195,21 +195,21 @@ int main(void) {
   while (1)
   {
 
-    if(reset_flag){
-      nh.loginfo("reset");
-      bdc_set_enabled(motor_a, 0);
-      bdc_set_enabled(motor_b, 0);
+    // if(reset_flag){
+    //   nh.loginfo("reset");
+    //   bdc_set_enabled(motor_a, 0);
+    //   bdc_set_enabled(motor_b, 0);
 
-      nh.getHardware()->delay(500);
-      bdc_set_enabled(motor_a, 1);
-      bdc_set_enabled(motor_b, 1);
+    //   nh.getHardware()->delay(500);
+    //   bdc_set_enabled(motor_a, 1);
+    //   bdc_set_enabled(motor_b, 1);
 
-      reset_flag = false;
-    }
-    else{
-      bdc_set_velocity(motor_a, vel_a);
-      bdc_set_velocity(motor_b, vel_b);
-    }
+    //   reset_flag = false;
+    // }
+    // else{
+    //   bdc_set_velocity(motor_a, vel_a);
+    //   bdc_set_velocity(motor_b, vel_b);
+    // }
 
 
     // inc_dir_a = inc_get_direction(inc_a);
