@@ -19,14 +19,27 @@
 #include <std_msgs/Int32.h>
 #include <std_msgs/Bool.h>
 
+
+
+
 // TivaC specific includes
 extern "C"
 {
+  #include "driverlib/pin_map.h"
+  #include <driverlib/sysctl.c> 
   #include <driverlib/sysctl.h>
+  #include <driverlib/gpio.c>
   #include <driverlib/gpio.h>
   #include <driverlib/pwm.h>
   #include "inc/hw_memmap.h"
 }
+
+  
+
+#define LC_PERIPH SYSCTL_PERIPH_GPIOA
+#define LC_BASE GPIO_PORTA_BASE
+#define TLC GPIO_PIN_2
+#define BLC GPIO_PIN_3
 
 
 // ROS nodehandle
@@ -41,6 +54,7 @@ volatile int32_t inc_dir_a = 0;
 volatile uint32_t inc_pos_b = 0;
 volatile uint32_t inc_vel_b = 0;
 volatile int32_t inc_dir_b = 0;
+
 
 bool reset_flag = false;
 
@@ -71,6 +85,9 @@ int main(void) {
         //HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = GPIO_LOCK_KEY;
         //HWREG(GPIO_PORTF_BASE + GPIO_O_CR) |= 0x01;
         //HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = 0; 
+  //Limit Switch Variables
+  volatile int32_t TLC_value=0;
+  volatile int32_t BLC_value=0;
 
   // Tiva boilerplate
   MAP_FPUEnable();
@@ -119,6 +136,17 @@ int main(void) {
   motor_a.GPIO_PIN_CS = GPIO_PIN_4;
   motor_a.ADC_BASE_CS = ADC1_BASE;
   motor_a.ADC_CTL_CH_CS = ADC_CTL_CH10;
+  
+  //Limit switch initialization
+  SysCtlPeripheralEnable(LC_PERIPH);
+  while(!SysCtlPeripheralReady(LC_PERIPH)){};
+  GPIOPinTypeGPIOInput(LC_BASE, TLC);
+  GPIOPinTypeGPIOInput(LC_BASE, BLC);
+  GPIOPadConfigSet(LC_BASE, TLC, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+  GPIOPadConfigSet(LC_BASE, BLC, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
+
+
+  
 
   // Motor initialization-DRILL
   BDC motor_b;
@@ -194,6 +222,24 @@ int main(void) {
 
   while (1)
   {
+    TLC_value= GPIOPinRead(LC_BASE,TLC);
+    BLC_value= GPIOPinRead(LC_BASE,BLC);
+
+    //if(TLC_value == TLC && vel_a > 0)
+    //{
+    //  bdc_set_velocity(motor_a, vel_a);
+    //}
+    //else if (BLC_value == BLC && vel_a < 0)
+    //{
+     bdc_set_velocity(motor_a, vel_a);
+    //}
+    //else
+    //{
+    //  bdc_set_velocity(motor_a, 0);
+    //}
+  bdc_set_velocity(motor_b, vel_b);
+
+  
 
     // if(reset_flag){
     //   nh.loginfo("reset");
@@ -206,19 +252,16 @@ int main(void) {
 
     //   reset_flag = false;
     // }
-    // else{
-    //   bdc_set_velocity(motor_a, vel_a);
-    //   bdc_set_velocity(motor_b, vel_b);
-    // }
+    
 
 
     // inc_dir_a = inc_get_direction(inc_a);
     // inc_vel_a = inc_get_velocity(inc_a);
     // inc_pos_a = inc_get_position(inc_a);
-    inc_a_msg.data = inc_get_position(inc_a);
-    inc_encoder_a.publish(&inc_a_msg);
-    inc_b_msg.data = inc_get_position(inc_b);
-    inc_encoder_b.publish(&inc_b_msg);
+    //inc_a_msg.data = inc_get_position(inc_a);
+    //inc_encoder_a.publish(&inc_a_msg);
+    //inc_b_msg.data = inc_get_position(inc_b);
+    //inc_encoder_b.publish(&inc_b_msg);
     nh.spinOnce();
     nh.getHardware()->delay(10);
   }
