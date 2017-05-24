@@ -14,7 +14,7 @@
 #include "../lib/bdc_motor/bdc_motor.h"
 #include "../lib/inc_encoder/inc_encoder.h"
 
-// ROS includes
+// ROS includeiis
 #include <ros.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/Bool.h>
