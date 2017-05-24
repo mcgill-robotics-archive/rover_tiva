@@ -29,11 +29,11 @@ include_directories(include ${catkin_INCLUDE_DIRS})
 
 add_executable(reset_motor_service reset_motor_service.cpp)
 target_link_libraries(reset_motor_service ${catkin_LIBRARIES})
-add_dependencies(reset_motor_service rover_tiva_generate_messages_cp)
+add_dependencies(reset_motor_service rover_tiva_generate_messages_cpp)
 
 add_executable(brake_motor_service brake_motor_service.cpp)
 target_link_libraries(brake_motor_service ${catkin_LIBRARIES})
-add_dependencies(brake_motor_service rover_tiva_generate_messages_cp)
+add_dependencies(brake_motor_service rover_tiva_generate_messages_cpp)
 
 
 
