@@ -34,12 +34,23 @@ extern "C"
   #include "inc/hw_memmap.h"
 }
 
+
+#define BUTTON_PERIPH SYSCTL_PERIPH_GPIOA
+#define BUTTON_BASE GPIO_PORTA_BASE
+#define BUTTON GPIO_PIN_5
+volatile uint32_t value=0;
   
 
 #define LC_PERIPH SYSCTL_PERIPH_GPIOA
 #define LC_BASE GPIO_PORTA_BASE
 #define TLC GPIO_PIN_2
 #define BLC GPIO_PIN_3
+
+
+
+#define LED_PERIPH SYSCTL_PERIPH_GPIOD
+#define LED_BASE GPIO_PORTD_BASE
+#define RED_LED GPIO_PIN_0
 
 
 // ROS nodehandle
@@ -140,12 +151,20 @@ int main(void) {
   //Limit switch initialization
   SysCtlPeripheralEnable(LC_PERIPH);
   while(!SysCtlPeripheralReady(LC_PERIPH)){};
+SysCtlPeripheralEnable(BUTTON_PERIPH);
+  while(!SysCtlPeripheralReady(BUTTON_PERIPH)){}
+  SysCtlDelay(3);
   GPIOPinTypeGPIOInput(LC_BASE, TLC);
   GPIOPinTypeGPIOInput(LC_BASE, BLC);
   GPIOPadConfigSet(LC_BASE, TLC, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-  GPIOPadConfigSet(LC_BASE, BLC, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);
-
-
+  GPIOPadConfigSet(LC_BASE, BLC, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);  
+  
+  // LED 
+  SysCtlPeripheralEnable(LED_PERIPH);
+  while(!SysCtlPeripheralReady(LED_PERIPH)){}
+  GPIOPinTypeGPIOOutput(LED_BASE, RED_LED);
+  GPIOPinTypeGPIOInput(BUTTON_BASE, BUTTON);
+  GPIOPadConfigSet(BUTTON_BASE, BUTTON, GPIO_STRENGTH_2MA,     GPIO_PIN_TYPE_STD_WPU);
   
 
   // Motor initialization-DRILL
@@ -224,20 +243,30 @@ int main(void) {
   {
     TLC_value= GPIOPinRead(LC_BASE,TLC);
     BLC_value= GPIOPinRead(LC_BASE,BLC);
+    
+  //value = GPIOPinRead(BUTTON_BASE, BUTTON);
+  //  if( BLC_value == BLC)
+  //  {
+  //    GPIOPinWrite(LED_BASE, RED_LED, RED_LED);
+  // }
+  //  else
+  //  {
+  //    GPIOPinWrite(LED_BASE, RED_LED, 0);
+  // }
 
-    //if(TLC_value == TLC && vel_a > 0)
-    //{
-    //  bdc_set_velocity(motor_a, vel_a);
-    //}
+    if(TLC_value == TLC && vel_a > 0)
+    {
+    bdc_set_velocity(motor_a, vel_a);
+    }
     //else if (BLC_value == BLC && vel_a < 0)
     //{
-     bdc_set_velocity(motor_a, vel_a);
+   //  bdc_set_velocity(motor_a, vel_a);
     //}
-    //else
-    //{
-    //  bdc_set_velocity(motor_a, 0);
-    //}
-  bdc_set_velocity(motor_b, vel_b);
+    else
+    {
+      bdc_set_velocity(motor_a, 0);
+    }
+ // bdc_set_velocity(motor_b, vel_b);
 
   
 
