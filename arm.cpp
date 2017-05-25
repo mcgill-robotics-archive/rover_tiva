@@ -3,6 +3,7 @@
 #define MOTOR_B "motor_shoulder_b"
 #define MOTOR_RESET "motor_shoulder_reset"
 #define MOTOR_BRAKE "motor_shoulder_brake"
+#define MOTOR_FAULT "motor_shoulder_fault"
 #define INC_ENCODER_A "inc_shoulder_a"
 #define INC_ENCODER_B "inc_shoulder_b"
 #endif
@@ -12,6 +13,7 @@
 #define MOTOR_B "motor_elbow_b"
 #define MOTOR_RESET "motor_elbow_reset"
 #define MOTOR_BRAKE "motor_elbow_brake"
+#define MOTOR_FAULT "motor_elbow_fault"
 #define INC_ENCODER_A "inc_elbow_a"
 #define INC_ENCODER_B "inc_elbow_b"
 #endif
@@ -21,6 +23,7 @@
 #define MOTOR_B "motor_wrist_b"
 #define MOTOR_RESET "motor_wrist_reset"
 #define MOTOR_BRAKE "motor_wrist_brake"
+#define MOTOR_FAULT "motor_wrist_fault"
 #define INC_ENCODER_A "inc_wrist_a"
 #define INC_ENCODER_B "inc_wrist_b"
 #endif
@@ -39,12 +42,11 @@
 #include <std_msgs/Bool.h>
 
 // TivaC specific includes
-extern "C"
-{
-#include <driverlib/sysctl.h>
-#include <driverlib/gpio.h>
-#include <driverlib/pwm.h>
-#include "inc/hw_memmap.h"
+extern "C" {
+  #include <driverlib/sysctl.h>
+  #include <driverlib/gpio.h>
+  #include <driverlib/pwm.h>
+  #include "inc/hw_memmap.h"
 }
 
 
@@ -106,6 +108,9 @@ ros::Publisher inc_encoder_a(INC_ENCODER_A, &inc_a_msg);
 std_msgs::Int32 inc_b_msg;
 ros::Publisher inc_encoder_b(INC_ENCODER_B, &inc_b_msg);
 
+std_msgs::Bool fault_msg;
+ros::Publisher motor_fault(MOTOR_FAULT, &fault_msg);
+
 int main(void) {
   // Tiva boilerplate
   MAP_FPUEnable();
@@ -121,6 +126,7 @@ int main(void) {
 #endif
   nh.advertise(inc_encoder_a);
   nh.advertise(inc_encoder_b);
+  nh.advertise(motor_fault);
 
   // Motor initialization
   BDC motor_a;
@@ -195,6 +201,14 @@ int main(void) {
   motor_b.ADC_CTL_CH_CS = ADC_CTL_CH2;
 
 #ifdef ARM_WRIST
+
+  // GPIO Unlock for PD7. TODO this should eventually be moved to a library
+  HWREG(GPIO_PORTD_BASE + GPIO_O_LOCK) = GPIO_LOCK_KEY;
+  HWREG(GPIO_PORTD_BASE + GPIO_O_CR) |= 0x80;
+  HWREG(GPIO_PORTD_BASE + GPIO_O_AFSEL) &= ~0x80;  
+  HWREG(GPIO_PORTD_BASE + GPIO_O_DEN) |= 0x80;
+  HWREG(GPIO_PORTD_BASE + GPIO_O_LOCK) = 0;
+
   // Motor initialization
   BDC motor_c;
   // IN1 - Speed Output PA6
@@ -323,6 +337,13 @@ int main(void) {
       inc_encoder_a.publish(&inc_a_msg);
       inc_b_msg.data = inc_get_position(inc_b);
       inc_encoder_b.publish(&inc_b_msg);
+#ifdef ARM_WRIST
+      fault_msg.data = (bdc_get_fault(motor_a) == 1 || bdc_get_fault(motor_b) == 1
+                                                    || bdc_get_fault(motor_c) == 1);
+#else
+      fault_msg.data = (bdc_get_fault(motor_a) == 1 || bdc_get_fault(motor_b) == 1);
+#endif
+      motor_fault.publish(&fault_msg);
       nh.spinOnce();
       nh.getHardware()->delay(10);
     }
