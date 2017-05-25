@@ -18,22 +18,19 @@ std_msgs::Bool reset_msg;
 ros::Publisher reset_publisher;
 
 bool reset_cb(const rover_tiva::ResetMotorRequest& request, rover_tiva::ResetMotorResponse& response){
+  response.Success = false;
   ROS_DEBUG("Sending initial message");
   ros::NodeHandle nh_temp;
 
-  reset_msg.data = true;
-  reset_publisher = nh_temp.advertise<std_msgs::Bool>(request.MotorName, 1);
+  reset_msg.data = request.Enable;
+  reset_publisher = nh_temp.advertise<std_msgs::Bool>(request.MotorName, 10);
   reset_publisher.publish(reset_msg);
 
   ros::Duration(0.5).sleep();
 
-  ROS_DEBUG("disabling reset message");
-  reset_msg.data = false;
-  reset_publisher.publish(reset_msg);
-
   // delete reset_publisher;
   response.Success = true;
-  return true;
+  return response.Success;
 }
 
 
