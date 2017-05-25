@@ -3,6 +3,7 @@
 ## Setup Instructions
 - Follow the `rosserial_tivac` setup instructions here: http://wiki.ros.org/rosserial_tivac/Tutorials/TivaWare%20Setup
 - Be sure to install `rosserial_tivac` from source, not from the Ubuntu repo: https://github.com/vmatos/rosserial_tivac
+- You may need to `cd` into your Tivaware directory and run `make`. Make sure you have the correct version of the ARM gcc compiler installed
 - Copy `71-rover-tiva.rules` to `/etc/udev/rules.d/` and refresh the udev rules (you could do this by rebooting)
 
 ## Running Instructions 
