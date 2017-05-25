@@ -4,10 +4,10 @@
 #define MOTOR_RESET "motor_shoulder_reset"
 #define MOTOR_BRAKE_A "motor_shoulder_brake_a"
 #define MOTOR_BRAKE_B "motor_shoulder_brake_b"
+#define MOTOR_BRAKE "motor_shoulder_brake"
+#define MOTOR_FAULT "motor_shoulder_fault"
 #define INC_ENCODER_A "inc_shoulder_a"
 #define INC_ENCODER_B "inc_shoulder_b"
-#define STATUS_A "motor_status_shoulder_a"
-#define STATUS_B "motor_status_shoulder_b"
 #endif
 
 #ifdef ARM_ELBOW
@@ -16,10 +16,9 @@
 #define MOTOR_RESET "motor_elbow_reset"
 #define MOTOR_BRAKE_A "motor_elbow_brake_a"
 #define MOTOR_BRAKE_B "motor_elbow_brake_b"
+#define MOTOR_FAULT "motor_elbow_fault"
 #define INC_ENCODER_A "inc_elbow_a"
 #define INC_ENCODER_B "inc_elbow_b"
-#define STATUS_A "motor_status_elbow_a"
-#define STATUS_B "motor_status_elbow_b"
 #endif
 
 #ifdef ARM_WRIST
@@ -29,11 +28,9 @@
 #define MOTOR_BRAKE_A "motor_wrist_brake_a"
 #define MOTOR_BRAKE_B "motor_wrist_brake_b"
 #define MOTOR_BRAKE_C "motor_wrist_brake_c"
+#define MOTOR_FAULT "motor_wrist_fault"
 #define INC_ENCODER_A "inc_wrist_a"
 #define INC_ENCODER_B "inc_wrist_b"
-#define STATUS_A "motor_status_wrist_a"
-#define STATUS_B "motor_status_wrist_b"
-#define STATUS_C "motor_status_wrist_c"
 #endif
 
 // Standard includes
@@ -51,12 +48,11 @@
 #include <std_msgs/Bool.h>
 
 // TivaC specific includes
-extern "C"
-{
-#include <driverlib/sysctl.h>
-#include <driverlib/gpio.h>
-#include <driverlib/pwm.h>
-#include "inc/hw_memmap.h"
+extern "C" {
+  #include <driverlib/sysctl.h>
+  #include <driverlib/gpio.h>
+  #include <driverlib/pwm.h>
+  #include "inc/hw_memmap.h"
 }
 
 
@@ -134,16 +130,8 @@ std_msgs::Int32 inc_b_msg;
 ros::Publisher inc_encoder_b(INC_ENCODER_B, &inc_b_msg);
 
 
-std_msgs::UInt8 status_msg_a;
-ros::Publisher status_a_publisher(STATUS_A, &status_msg_a);
-
-std_msgs::UInt8 status_msg_b;
-ros::Publisher status_b_publisher(STATUS_B, &status_msg_b);
-
-#ifdef ARM_WRIST
-std_msgs::UInt8 status_msg_c;
-ros::Publisher status_c_publisher(STATUS_C, &status_msg_c);
-#endif
+std_msgs::Bool fault_msg;
+ros::Publisher motor_fault(MOTOR_FAULT, &fault_msg);
 
 int main(void) {
   // Tiva boilerplate
@@ -161,12 +149,10 @@ int main(void) {
 #ifdef ARM_WRIST
   nh.subscribe(sub_c);
   nh.subscribe(sub_brake_c);
-  nh.advertise(status_c_publisher);
 #endif
   nh.advertise(inc_encoder_a);
   nh.advertise(inc_encoder_b);
-  nh.advertise(status_a_publisher);
-  nh.advertise(status_b_publisher);
+  nh.advertise(motor_fault);
 
   // Motor initialization
   BDC motor_a;
@@ -241,6 +227,14 @@ int main(void) {
   motor_b.ADC_CTL_CH_CS = ADC_CTL_CH2;
 
 #ifdef ARM_WRIST
+
+  // GPIO Unlock for PD7. TODO this should eventually be moved to a library
+  HWREG(GPIO_PORTD_BASE + GPIO_O_LOCK) = GPIO_LOCK_KEY;
+  HWREG(GPIO_PORTD_BASE + GPIO_O_CR) |= 0x80;
+  HWREG(GPIO_PORTD_BASE + GPIO_O_AFSEL) &= ~0x80;
+  HWREG(GPIO_PORTD_BASE + GPIO_O_DEN) |= 0x80;
+  HWREG(GPIO_PORTD_BASE + GPIO_O_LOCK) = 0;
+
   // Motor initialization
   BDC motor_c;
   // IN1 - Speed Output PA6
@@ -347,6 +341,7 @@ int main(void) {
          ){
         nh.getHardware()->delay(100);
       }
+
       // Check for Reset
       else if(reset_flag){
         nh.loginfo("reset");
@@ -374,23 +369,23 @@ int main(void) {
       }
 
 
-        // inc_dir_a = inc_get_direction(inc_a);
-        // inc_vel_a = inc_get_velocity(inc_a);
-        // inc_pos_a = inc_get_position(inc_a);
-        inc_a_msg.data = inc_get_position(inc_a);
-        inc_encoder_a.publish(&inc_a_msg);
-        inc_b_msg.data = inc_get_position(inc_b);
-        inc_encoder_b.publish(&inc_b_msg);
 
-        status_msg_a.data = bdc_get_fault(motor_a);
-        status_a_publisher.publish(&status_msg_a);
-        status_msg_b.data = bdc_get_fault(motor_b);
-        status_b_publisher.publish(&status_msg_b);
+
+      // inc_dir_a = inc_get_direction(inc_a);
+      // inc_vel_a = inc_get_velocity(inc_a);
+      // inc_pos_a = inc_get_position(inc_a);
+      inc_a_msg.data = inc_get_position(inc_a);
+      inc_encoder_a.publish(&inc_a_msg);
+      inc_b_msg.data = inc_get_position(inc_b);
+      inc_encoder_b.publish(&inc_b_msg);
 #ifdef ARM_WRIST
-        status_msg_c.data = bdc_get_fault(motor_c);
-        status_c_publisher.publish(&status_msg_c);
+      fault_msg.data = (bdc_get_fault(motor_a) == 1 || bdc_get_fault(motor_b) == 1
+                                                    || bdc_get_fault(motor_c) == 1);
+#else
+      fault_msg.data = (bdc_get_fault(motor_a) == 1 || bdc_get_fault(motor_b) == 1);
 #endif
-        nh.spinOnce();
-        nh.getHardware()->delay(10);
-      }
+      motor_fault.publish(&fault_msg);
+      nh.spinOnce();
+      nh.getHardware()->delay(10);
+    }
 }

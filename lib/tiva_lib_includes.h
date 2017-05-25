@@ -24,7 +24,6 @@
 #include "inc/hw_types.h"
 #include "inc/hw_qei.h"
 #include "inc/hw_ssi.h"
-#include "inc/tm4c123gh6pm.h"
 
 #include "driverlib/adc.h"
 #include "driverlib/debug.h"

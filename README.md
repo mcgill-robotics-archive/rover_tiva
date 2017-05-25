@@ -1,7 +1,8 @@
 # Rover Tiva Microcontroller Code Submodule
 
 ## Setup Instructions
-
+- Follow the `rosserial_tivac` setup instructions here: http://wiki.ros.org/rosserial_tivac/Tutorials/TivaWare%20Setup
+- Be sure to install `rosserial_tivac` from source, not from the Ubuntu repo: https://github.com/vmatos/rosserial_tivac
 - Copy `71-rover-tiva.rules` to `/etc/udev/rules.d/` and refresh the udev rules (you could do this by rebooting)
 
 ## Running Instructions 
