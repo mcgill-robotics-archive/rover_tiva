@@ -311,8 +311,10 @@ int main(void) {
 
   inc_init(inc_a);
   inc_init(inc_b);
-
+  uint32_t time_last_update = nh.getHardware()->time();
   while (1)
+  {
+    if(nh.getHardware()->time() - time_last_update >= 10)
     {
       // Brake Enable/Disable
       bdc_set_brake(motor_a, brake_flag_a);
@@ -333,11 +335,12 @@ int main(void) {
 #endif
 
 
-      if(brake_flag_a || brake_flag_b
 #ifdef ARM_WRIST
- || brake_flag_c
+      if(brake_flag_a || brake_flag_b || brake_flag_c)
+#else
+      if(brake_flag_a || brake_flag_b)
 #endif
-         ){
+      {
         nh.getHardware()->delay(100);
       }
 
@@ -349,7 +352,6 @@ int main(void) {
 #ifdef ARM_WRIST
         bdc_set_enabled(motor_c, 0);
 #endif
-
       }
 
       // Enable motors and set their velocities
@@ -367,9 +369,6 @@ int main(void) {
 #endif
       }
 
-
-
-
       // inc_dir_a = inc_get_direction(inc_a);
       // inc_vel_a = inc_get_velocity(inc_a);
       // inc_pos_a = inc_get_position(inc_a);
@@ -378,13 +377,13 @@ int main(void) {
       inc_b_msg.data = inc_get_position(inc_b);
       inc_encoder_b.publish(&inc_b_msg);
 #ifdef ARM_WRIST
-      fault_msg.data = (bdc_get_fault(motor_a) == 1 || bdc_get_fault(motor_b) == 1
-                                                    || bdc_get_fault(motor_c) == 1);
+      fault_msg.data = (bdc_get_fault(motor_a) || bdc_get_fault(motor_b)
+        || bdc_get_fault(motor_c));
 #else
-      fault_msg.data = (bdc_get_fault(motor_a) == 1 || bdc_get_fault(motor_b) == 1);
+      fault_msg.data = (bdc_get_fault(motor_a) || bdc_get_fault(motor_b));
 #endif
       motor_fault.publish(&fault_msg);
-      nh.spinOnce();
-      nh.getHardware()->delay(10);
     }
+    nh.spinOnce();
+  }
 }
