@@ -4,7 +4,6 @@
 #define MOTOR_RESET "motor_shoulder_reset"
 #define MOTOR_BRAKE_A "motor_shoulder_brake_a"
 #define MOTOR_BRAKE_B "motor_shoulder_brake_b"
-#define MOTOR_BRAKE "motor_shoulder_brake"
 #define MOTOR_FAULT "motor_shoulder_fault"
 #define INC_ENCODER_A "inc_shoulder_a"
 #define INC_ENCODER_B "inc_shoulder_b"
