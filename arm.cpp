@@ -2,27 +2,38 @@
 #define MOTOR_A "motor_shoulder_a"
 #define MOTOR_B "motor_shoulder_b"
 #define MOTOR_RESET "motor_shoulder_reset"
-#define MOTOR_BRAKE "motor_shoulder_brake"
+#define MOTOR_BRAKE_A "motor_shoulder_brake_a"
+#define MOTOR_BRAKE_B "motor_shoulder_brake_b"
 #define INC_ENCODER_A "inc_shoulder_a"
 #define INC_ENCODER_B "inc_shoulder_b"
+#define STATUS_A "motor_status_shoulder_a"
+#define STATUS_B "motor_status_shoulder_b"
 #endif
 
 #ifdef ARM_ELBOW
 #define MOTOR_A "motor_elbow_a"
 #define MOTOR_B "motor_elbow_b"
 #define MOTOR_RESET "motor_elbow_reset"
-#define MOTOR_BRAKE "motor_elbow_brake"
+#define MOTOR_BRAKE_A "motor_elbow_brake_a"
+#define MOTOR_BRAKE_B "motor_elbow_brake_b"
 #define INC_ENCODER_A "inc_elbow_a"
 #define INC_ENCODER_B "inc_elbow_b"
+#define STATUS_A "motor_status_elbow_a"
+#define STATUS_B "motor_status_elbow_b"
 #endif
 
 #ifdef ARM_WRIST
 #define MOTOR_A "motor_wrist_a"
 #define MOTOR_B "motor_wrist_b"
 #define MOTOR_RESET "motor_wrist_reset"
-#define MOTOR_BRAKE "motor_wrist_brake"
+#define MOTOR_BRAKE_A "motor_wrist_brake_a"
+#define MOTOR_BRAKE_B "motor_wrist_brake_b"
+#define MOTOR_BRAKE_C "motor_wrist_brake_c"
 #define INC_ENCODER_A "inc_wrist_a"
 #define INC_ENCODER_B "inc_wrist_b"
+#define STATUS_A "motor_status_wrist_a"
+#define STATUS_B "motor_status_wrist_b"
+#define STATUS_C "motor_status_wrist_c"
 #endif
 
 // Standard includes
@@ -36,6 +47,7 @@
 // ROS includes
 #include <ros.h>
 #include <std_msgs/Int32.h>
+#include <std_msgs/UInt8.h>
 #include <std_msgs/Bool.h>
 
 // TivaC specific includes
@@ -65,7 +77,11 @@ volatile uint32_t inc_vel_b = 0;
 volatile int32_t inc_dir_b = 0;
 
 bool reset_flag = false;
-bool brake_flag = false;
+bool brake_flag_a = false;
+bool brake_flag_b = false;
+#ifdef ARM_WRIST
+bool brake_flag_c = false;
+#endif
 
 void vel_a_cb(const std_msgs::Int32& msg) {
   vel_a = msg.data;
@@ -92,19 +108,42 @@ void reset_cb(const std_msgs::Bool& status){
 
 ros::Subscriber<std_msgs::Bool> sub_reset(MOTOR_RESET, &reset_cb);
 
-// Brake Subscriber
-void brake_cb(const std_msgs::Bool& status){
-  brake_flag = status.data;
-
+// Brake Subscribers
+void brake_cb_a(const std_msgs::Bool& status){
+  brake_flag_a = status.data;
 }
+ros::Subscriber<std_msgs::Bool> sub_brake_a(MOTOR_BRAKE_A, &brake_cb_a);
 
-ros::Subscriber<std_msgs::Bool> sub_brake(MOTOR_BRAKE, &brake_cb);
+void brake_cb_b(const std_msgs::Bool& status){
+  brake_flag_b = status.data;
+}
+ros::Subscriber<std_msgs::Bool> sub_brake_b(MOTOR_BRAKE_B, &brake_cb_b);
+
+#ifdef ARM_WRIST
+void brake_cb_c(const std_msgs::Bool& status){
+  brake_flag_c = status.data;
+}
+ros::Subscriber<std_msgs::Bool> sub_brake_c(MOTOR_BRAKE_C, &brake_cb_c);
+#endif
+
 
 std_msgs::Int32 inc_a_msg;
 ros::Publisher inc_encoder_a(INC_ENCODER_A, &inc_a_msg);
 
 std_msgs::Int32 inc_b_msg;
 ros::Publisher inc_encoder_b(INC_ENCODER_B, &inc_b_msg);
+
+
+std_msgs::UInt8 status_msg_a;
+ros::Publisher status_a_publisher(STATUS_A, &status_msg_a);
+
+std_msgs::UInt8 status_msg_b;
+ros::Publisher status_b_publisher(STATUS_B, &status_msg_b);
+
+#ifdef ARM_WRIST
+std_msgs::UInt8 status_msg_c;
+ros::Publisher status_c_publisher(STATUS_C, &status_msg_c);
+#endif
 
 int main(void) {
   // Tiva boilerplate
@@ -114,13 +153,20 @@ int main(void) {
 
   // Rosserial boilerplate
   nh.initNode();
+  nh.subscribe(sub_reset);
   nh.subscribe(sub_a);
+  nh.subscribe(sub_brake_a);
   nh.subscribe(sub_b);
+  nh.subscribe(sub_brake_b);
 #ifdef ARM_WRIST
   nh.subscribe(sub_c);
+  nh.subscribe(sub_brake_c);
+  nh.advertise(status_c_publisher);
 #endif
   nh.advertise(inc_encoder_a);
   nh.advertise(inc_encoder_b);
+  nh.advertise(status_a_publisher);
+  nh.advertise(status_b_publisher);
 
   // Motor initialization
   BDC motor_a;
@@ -276,20 +322,31 @@ int main(void) {
   while (1)
     {
       // Brake Enable/Disable
-      bdc_set_brake(motor_a, brake_flag);
-      bdc_set_brake(motor_b, brake_flag);
+      bdc_set_brake(motor_a, brake_flag_a);
+      bdc_set_brake(motor_b, brake_flag_b);
 #ifdef ARM_WRIST
-      bdc_set_brake(motor_c, brake_flag);
+      bdc_set_brake(motor_c, brake_flag_c);
 #endif
-      if(brake_flag){
+      if(brake_flag_a)
         bdc_set_velocity(motor_a, 0);
+
+      if(brake_flag_b)
         bdc_set_velocity(motor_b, 0);
+
 #ifdef ARM_WRIST
+      if(brake_flag_c){
         bdc_set_velocity(motor_c, 0);
+      }
 #endif
+
+
+      if(brake_flag_a || brake_flag_b
+#ifdef ARM_WRIST
+ || brake_flag_c
+#endif
+         ){
         nh.getHardware()->delay(100);
       }
-
       // Check for Reset
       else if(reset_flag){
         nh.loginfo("reset");
@@ -298,16 +355,17 @@ int main(void) {
 #ifdef ARM_WRIST
         bdc_set_enabled(motor_c, 0);
 #endif
-        nh.getHardware()->delay(500);
+
+      }
+
+      // Enable motors and set their velocities
+      else{
         bdc_set_enabled(motor_a, 1);
         bdc_set_enabled(motor_b, 1);
 #ifdef ARM_WRIST
         bdc_set_enabled(motor_c, 1);
 #endif
-        reset_flag = false;
-      }
 
-      else{
         bdc_set_velocity(motor_a, vel_a);
         bdc_set_velocity(motor_b, vel_b);
 #ifdef ARM_WRIST
@@ -316,14 +374,23 @@ int main(void) {
       }
 
 
-      // inc_dir_a = inc_get_direction(inc_a);
-      // inc_vel_a = inc_get_velocity(inc_a);
-      // inc_pos_a = inc_get_position(inc_a);
-      inc_a_msg.data = inc_get_position(inc_a);
-      inc_encoder_a.publish(&inc_a_msg);
-      inc_b_msg.data = inc_get_position(inc_b);
-      inc_encoder_b.publish(&inc_b_msg);
-      nh.spinOnce();
-      nh.getHardware()->delay(10);
-    }
+        // inc_dir_a = inc_get_direction(inc_a);
+        // inc_vel_a = inc_get_velocity(inc_a);
+        // inc_pos_a = inc_get_position(inc_a);
+        inc_a_msg.data = inc_get_position(inc_a);
+        inc_encoder_a.publish(&inc_a_msg);
+        inc_b_msg.data = inc_get_position(inc_b);
+        inc_encoder_b.publish(&inc_b_msg);
+
+        status_msg_a.data = bdc_get_fault(motor_a);
+        status_a_publisher.publish(&status_msg_a);
+        status_msg_b.data = bdc_get_fault(motor_b);
+        status_b_publisher.publish(&status_msg_b);
+#ifdef ARM_WRIST
+        status_msg_c.data = bdc_get_fault(motor_c);
+        status_c_publisher.publish(&status_msg_c);
+#endif
+        nh.spinOnce();
+        nh.getHardware()->delay(10);
+      }
 }

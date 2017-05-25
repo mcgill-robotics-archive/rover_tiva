@@ -1,3 +1,4 @@
 string MotorName
+bool Enable
 ---
 bool Success
