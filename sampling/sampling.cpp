@@ -62,18 +62,27 @@ void PWM_Pulse(uint32_t Speed);
 void PWM_Stop(void);
 void PWM_Config(void);
 
+uint32_t Data[3];
+uint32_t wind[10];
+uint32_t temperature[10];
+uint32_t humidity[10];
+uint32_t wind_average;
+uint32_t temperature_average;
+uint32_t humidity_average;
+
 
 //Probe variables
 #ifdef SAMPLING
 volatile uint32_t vel_c=0;
 #endif
 
-static enum{
-	Top,
-	Bottom,
-	Up,
-	Down
-}State;
+//static enum{
+//	Top,
+//	Bottom,
+//	Up,
+//	Down,
+//        Done
+//}State;
 
 
 bool reset_flag = false;
@@ -99,6 +108,17 @@ ros::Publisher inc_encoder_a(INC_ENCODER_A, &inc_a_msg);
 
 std_msgs::Int32 inc_b_msg;
 ros::Publisher inc_encoder_b(INC_ENCODER_B, &inc_b_msg);
+
+std_msgs::Int32 probe_wind_msg;
+ros::Publisher probe_wind("probe_wind", &probe_wind_msg);
+
+std_msgs::Int32 probe_humidity_msg;
+ros::Publisher probe_humidity("probe_humidity", &probe_humidity_msg);
+
+std_msgs::Int32 probe_temperature_msg;
+ros::Publisher probe_temperature("probe_temperature", &probe_temperature_msg);
+
+
 
 #ifdef SAMPLING
 void vel_c_cb(const std_msgs::Int32& msg) {
@@ -150,6 +170,95 @@ void PWM_Config(void){
 	//PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT, true);  
 }
 
+
+void ADC_Init(void){
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_ADC0);	// Enable the ADC peripheral and wait for it to be ready.
+	while(!SysCtlPeripheralReady(SYSCTL_PERIPH_ADC0)){}
+
+	ADCHardwareOversampleConfigure(ADC0_BASE, 64);
+
+	SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOD);	// Enable GPIO port D and wait for it to be ready.
+	while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOD)){}
+        SysCtlPeripheralEnable(SYSCTL_PERIPH_GPIOE);	// Enable GPIO port E and wait for it to be ready.
+	while(!SysCtlPeripheralReady(SYSCTL_PERIPH_GPIOE)){}
+        
+	GPIOPinTypeADC(GPIO_PORTD_BASE, GPIO_PIN_2);	
+	GPIOPinTypeADC(GPIO_PORTD_BASE, GPIO_PIN_3);
+	GPIOPinTypeADC(GPIO_PORTE_BASE, GPIO_PIN_3);
+
+	ADCSequenceConfigure(ADC0_BASE, 3, ADC_TRIGGER_PROCESSOR, 0); // Configure the ADC sample sequence.
+
+	ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH5 | ADC_CTL_IE |ADC_CTL_END); // Configure the ADC sample sequence steps-PD2-HUMIDITY
+	ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH4 | ADC_CTL_IE |ADC_CTL_END);//PD3-TEMPERATURE
+	ADCSequenceStepConfigure(ADC0_BASE, 3, 0, ADC_CTL_CH0 | ADC_CTL_IE |ADC_CTL_END);//PE3-WIND
+
+	ADCSequenceEnable(ADC0_BASE, 3);	// Since sample sequence 3 is now configured, it must be enabled.
+
+	ADCIntClear(ADC0_BASE, 3);
+}
+
+void Probe(void){
+	//wind
+
+	ADCSequenceStepConfigure(ADC0_BASE, 3, 0,  ADC_CTL_CH0 | ADC_CTL_IE |ADC_CTL_END); //PE3
+	ADCIntClear(ADC0_BASE, 3);
+	ADCProcessorTrigger(ADC0_BASE, 3);	// Trigger the ADC conversion.
+	while(!ADCIntStatus(ADC0_BASE, 3, false)){}	// Wait for conversion to be completed.
+	ADCIntClear(ADC0_BASE, 3);	// Clear the ADC interrupt flag.
+	ADCSequenceDataGet(ADC0_BASE, 3, &Data[0]); // Read ADC Value. ADC has 12-bit precision so the output ranges from 0 to 4095
+        
+        //temperature
+	ADCSequenceStepConfigure(ADC0_BASE, 3, 0,  ADC_CTL_CH4 | ADC_CTL_IE |ADC_CTL_END); //PD3
+	ADCIntClear(ADC0_BASE, 3);
+	ADCProcessorTrigger(ADC0_BASE, 3);
+	while(!ADCIntStatus(ADC0_BASE, 3, false)){}
+	ADCIntClear(ADC0_BASE, 3);
+	ADCSequenceDataGet(ADC0_BASE, 3, &Data[1]);
+
+
+	//humidity
+	ADCSequenceStepConfigure(ADC0_BASE, 3, 0,  ADC_CTL_CH5 | ADC_CTL_IE |ADC_CTL_END); //PD2
+	ADCIntClear(ADC0_BASE, 3);
+	ADCProcessorTrigger(ADC0_BASE, 3);
+	while(!ADCIntStatus(ADC0_BASE, 3, false)){}
+	ADCIntClear(ADC0_BASE, 3);
+	ADCSequenceDataGet(ADC0_BASE, 3, &Data[2]);
+
+  
+        
+       // for (uint32_t i=0; i<10; i++) {
+       // wind_average +=wind[i];
+       // temperature_average +=temperature[i];
+       // humidity_average +=humidity[i];
+       // }
+        
+        wind_average = Data[0];
+        temperature_average= Data[1];
+        humidity_average =Data[2];
+
+
+	if(wind_average>(uint32_t)495 & wind_average<(uint32_t)2483){// the voltage is above 0.4 and below 2v.
+		Data[0] = (((wind_average-496)*324)/1986);
+	}
+
+    else {
+        Data[0]=0;
+}
+        
+	if(temperature_average>(uint32_t)1551){
+		Data[1] = (((temperature_average-1552))/6);
+	}
+
+    else {
+        Data[1] = 0;
+}
+
+	if(humidity_average>0)
+	{
+		Data[2] = (humidity_average);
+	}
+}
+
 int main(void) {
   //THIS UNLOCKING MECHANISM NEEDS LOOKING INTO. 
   //HWREG(GPIO_PORTF_BASE + GPIO_O_LOCK) = GPIO_LOCK_KEY;
@@ -172,6 +281,10 @@ int main(void) {
   nh.subscribe(sub_c);
   nh.advertise(inc_encoder_a);
   nh.advertise(inc_encoder_b);
+  nh.advertise(probe_wind);
+  nh.advertise(probe_humidity);
+  nh.advertise(probe_temperature);
+ 
 
   // Motor initialization-CARRIAGE 
   BDC motor_a;
@@ -298,7 +411,9 @@ int main(void) {
   GPIOPadConfigSet(LP_BASE, BLP, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);  
   PWM_Config();
   PWM_Stop();
-  State = Top;
+//  State = Top;
+  ADC_Init();
+  
 
   while (1){
     TLC_value= GPIOPinRead(LC_BASE,TLC);
@@ -315,42 +430,67 @@ int main(void) {
     }
 
     bdc_set_velocity(motor_b, vel_b);
+
+//    switch(State){
+//		case Top:
+//			if(vel_c > 0){
+//				PWM_Pulse(80);
+//				State = Down;
+//			}
+//			break;
+//		case Bottom:
+//                        Probe();
+//			PWM_Pulse(20);
+//			State = Up;
+//			break;
+//		case Up:
+//			if(GPIOPinRead(LP_BASE,TLP)==0){
+//				PWM_Stop();
+//                                probe_wind_msg.data=Data[0];
+//                                probe_temperature_msg.data=Data[1];
+//                                probe_humidity_msg.data=Data[2];
+//                                probe_wind.publish(&probe_wind_msg);
+//                                probe_temperature.publish(&probe_temperature_msg);
+//                                probe_humidity.publish(&probe_humidity_msg);
+//				State = Done;
+//			}
+//			break;
+//		case Down:
+//			if(GPIOPinRead(LP_BASE,BLP)==0){
+//				PWM_Stop();
+//				State = Bottom;
+//			}
+//			break;
+//                case Done: break;
+//
+//		default:
+//			break;
+//		}
+           
+	if (GPIOPinRead(LP_BASE,TLP) == TLP  && vel_c == 80) {
+        PWM_Pulse(vel_c);
+    }
     
-    
-	
-		switch(State){
-		case Top:
-			if(vel_c > 0){
-				PWM_Pulse(80);
-				State = Down;
-			}
-			break;
-		case Bottom:
-			//Probe();
-			PWM_Pulse(20);
-			State = Up;
-			break;
-		case Up:
-			if(GPIOPinRead(LP_BASE,TLP)==0){
-				PWM_Stop();
-				
-			}
-			break;
-		case Down:
-			if(GPIOPinRead(LP_BASE,BLP)==0){
-				PWM_Stop();
-				State = Bottom;
-			}
-			break;
-		default:
-			break;
-		}
-	
-    
-    
-    // if(reset_flag){
-    //   nh.loginfo("reset");
-    //   bdc_set_enabled(motor_a, 0);
+    else  if (GPIOPinRead(LP_BASE,BLP) == BLP && vel_c == 20) {
+        PWM_Pulse(vel_c);
+    }
+
+    else {
+        PWM_Stop();
+    }
+
+    Probe();
+    probe_wind_msg.data=Data[0];
+    probe_temperature_msg.data=Data[1];                               
+    probe_humidity_msg.data=Data[2];
+    probe_wind.publish(&probe_wind_msg);                               
+    probe_temperature.publish(&probe_temperature_msg);                                
+    probe_humidity.publish(&probe_humidity_msg);
+              
+           
+        // if(reset_flag){
+        //   nh.loginfo("reset");
+      //   bdc_set_enabled(motor_a, 0);
     //   bdc_set_enabled(motor_b, 0);
 
     //   nh.getHardware()->delay(500);
@@ -359,13 +499,13 @@ int main(void) {
 
     //   reset_flag = false;
     // }
-    // inc_dir_a = inc_get_direction(inc_a);
-    // inc_vel_a = inc_get_velocity(inc_a);
-    // inc_pos_a = inc_get_position(inc_a);
-    //inc_a_msg.data = inc_get_position(inc_a);
-    //inc_encoder_a.publish(&inc_a_msg);
-    //inc_b_msg.data = inc_get_position(inc_b);
-    //inc_encoder_b.publish(&inc_b_msg);
+    inc_dir_a = inc_get_direction(inc_a);
+    inc_vel_a = inc_get_velocity(inc_a);
+    inc_pos_a = inc_get_position(inc_a);
+    inc_a_msg.data = inc_get_position(inc_a);
+    inc_encoder_a.publish(&inc_a_msg);
+    inc_b_msg.data = inc_get_position(inc_b);
+    inc_encoder_b.publish(&inc_b_msg);
     nh.spinOnce();
     nh.getHardware()->delay(10);
 
