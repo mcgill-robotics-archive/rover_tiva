@@ -4,7 +4,8 @@
 #define MOTOR_RESET "motor_shoulder_reset"
 #define MOTOR_BRAKE_A "motor_shoulder_brake_a"
 #define MOTOR_BRAKE_B "motor_shoulder_brake_b"
-#define MOTOR_FAULT "motor_shoulder_fault"
+#define MOTOR_FAULT_A "motor_shoulder_fault_a"
+#define MOTOR_FAULT_B "motor_shoulder_fault_b"
 #define INC_ENCODER_A "inc_shoulder_a"
 #define INC_ENCODER_B "inc_shoulder_b"
 #endif
@@ -15,7 +16,8 @@
 #define MOTOR_RESET "motor_elbow_reset"
 #define MOTOR_BRAKE_A "motor_elbow_brake_a"
 #define MOTOR_BRAKE_B "motor_elbow_brake_b"
-#define MOTOR_FAULT "motor_elbow_fault"
+#define MOTOR_FAULT_A "motor_elbow_fault_a"
+#define MOTOR_FAULT_B "motor_elbow_fault_b"
 #define INC_ENCODER_A "inc_elbow_a"
 #define INC_ENCODER_B "inc_elbow_b"
 #endif
@@ -27,7 +29,9 @@
 #define MOTOR_BRAKE_A "motor_wrist_brake_a"
 #define MOTOR_BRAKE_B "motor_wrist_brake_b"
 #define MOTOR_BRAKE_C "motor_wrist_brake_c"
-#define MOTOR_FAULT "motor_wrist_fault"
+#define MOTOR_FAULT_A "motor_wrist_fault_a"
+#define MOTOR_FAULT_B "motor_wrist_fault_b"
+#define MOTOR_FAULT_C "motor_wrist_fault_c"
 #define INC_ENCODER_A "inc_wrist_a"
 #define INC_ENCODER_B "inc_wrist_b"
 #endif
@@ -106,12 +110,12 @@ ros::Subscriber<std_msgs::Bool> sub_reset(MOTOR_RESET, &reset_cb);
 // Brake Subscribers
 void brake_cb_a(const std_msgs::Bool& status) {
   brake_flag_a = status.data;
-} 
+}
 ros::Subscriber<std_msgs::Bool> sub_brake_a(MOTOR_BRAKE_A, &brake_cb_a);
 
 void brake_cb_b(const std_msgs::Bool& status) {
   brake_flag_b = status.data;
-} 
+}
 ros::Subscriber<std_msgs::Bool> sub_brake_b(MOTOR_BRAKE_B, &brake_cb_b);
 
 #ifdef ARM_WRIST
@@ -129,8 +133,16 @@ std_msgs::Int32 inc_b_msg;
 ros::Publisher inc_encoder_b(INC_ENCODER_B, &inc_b_msg);
 
 
-std_msgs::Bool fault_msg;
-ros::Publisher motor_fault(MOTOR_FAULT, &fault_msg);
+std_msgs::Bool fault_msg_a;
+ros::Publisher motor_fault_a(MOTOR_FAULT_A, &fault_msg_a);
+
+std_msgs::Bool fault_msg_b;
+ros::Publisher motor_fault_b(MOTOR_FAULT_B, &fault_msg_b);
+
+#ifdef ARM_WRIST
+std_msgs::Bool fault_msg_c;
+ros::Publisher motor_fault_c(MOTOR_FAULT_C, &fault_msg_c);
+#endif
 
 BDC motor_a;
 BDC motor_b;
@@ -151,7 +163,7 @@ int main(void) {
   rosserial_init();
   motor_init();
   encoder_init();
-  
+
   uint32_t time_last_update = nh.getHardware()->time();
   while (1) {
     if(nh.getHardware()->time() - time_last_update >= 10) {
@@ -161,7 +173,7 @@ int main(void) {
 #ifdef ARM_WRIST
       bdc_set_brake(motor_c, brake_flag_c);
 #endif
-      if(brake_flag_a) {  
+      if(brake_flag_a) {
         bdc_set_velocity(motor_a, 0);
       }
 
@@ -215,13 +227,17 @@ int main(void) {
       inc_encoder_a.publish(&inc_a_msg);
       inc_b_msg.data = inc_get_position(inc_b);
       inc_encoder_b.publish(&inc_b_msg);
+
+      fault_msg_a.data = bdc_get_fault(motor_a);
+      motor_fault_a.publish(&fault_msg_a);
+      fault_msg_b.data = bdc_get_fault(motor_b);
+      motor_fault_b.publish(&fault_msg_b);
+
 #ifdef ARM_WRIST
-      fault_msg.data = (bdc_get_fault(motor_a) || bdc_get_fault(motor_b)
-        || bdc_get_fault(motor_c));
-#else
-      fault_msg.data = (bdc_get_fault(motor_a) || bdc_get_fault(motor_b));
+      fault_msg_c.data = bdc_get_fault(motor_c);
+      motor_fault_c.publish(&fault_msg_b);
 #endif
-      motor_fault.publish(&fault_msg);
+
     }
     nh.spinOnce();
   }
@@ -245,10 +261,14 @@ void rosserial_init() {
 #ifdef ARM_WRIST
   nh.subscribe(sub_c);
   nh.subscribe(sub_brake_c);
+  nh.advertise(motor_fault_c);
 #endif
   nh.advertise(inc_encoder_a);
   nh.advertise(inc_encoder_b);
-  nh.advertise(motor_fault);
+
+  nh.advertise(motor_fault_a);
+  nh.advertise(motor_fault_b);
+
 }
 
 void motor_init() {
@@ -404,5 +424,5 @@ void encoder_init() {
   inc_b.QEI_VELDIV = QEI_VELDIV_1;
 
   inc_init(inc_a);
-  inc_init(inc_b);     
+  inc_init(inc_b);
 }
