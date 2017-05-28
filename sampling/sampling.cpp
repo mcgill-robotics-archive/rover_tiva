@@ -2,8 +2,7 @@
 #define MOTOR_A "motor_carriage"
 #define MOTOR_B "motor_drill"
 #define MOTOR_RESET "motor_shoulder_reset"
-#define INC_ENCODER_A "inc_carriage"
-#define INC_ENCODER_B "inc_drill"
+#define INC_ENCODER_A "inc_drill"
 #endif
 
 // Standard includes
@@ -54,35 +53,18 @@ volatile int32_t vel_b = 0;
 volatile uint32_t inc_pos_a = 0;
 volatile uint32_t inc_vel_a = 0;
 volatile int32_t inc_dir_a = 0;
-volatile uint32_t inc_pos_b = 0;
-volatile uint32_t inc_vel_b = 0;
-volatile int32_t inc_dir_b = 0;
 
 void PWM_Pulse(uint32_t Speed);
 void PWM_Stop(void);
 void PWM_Config(void);
-
 uint32_t Data[3];
-uint32_t wind[10];
-uint32_t temperature[10];
-uint32_t humidity[10];
-uint32_t wind_average;
-uint32_t temperature_average;
-uint32_t humidity_average;
+
 
 
 //Probe variables
 #ifdef SAMPLING
 volatile uint32_t vel_c=0;
 #endif
-
-//static enum{
-//	Top,
-//	Bottom,
-//	Up,
-//	Down,
-//        Done
-//}State;
 
 
 bool reset_flag = false;
@@ -105,9 +87,6 @@ ros::Subscriber<std_msgs::Bool> sub_reset(MOTOR_RESET, &reset_cb);
 
 std_msgs::Int32 inc_a_msg;
 ros::Publisher inc_encoder_a(INC_ENCODER_A, &inc_a_msg);
-
-std_msgs::Int32 inc_b_msg;
-ros::Publisher inc_encoder_b(INC_ENCODER_B, &inc_b_msg);
 
 std_msgs::Int32 probe_wind_msg;
 ros::Publisher probe_wind("probe_wind", &probe_wind_msg);
@@ -163,11 +142,7 @@ void PWM_Config(void){
 	                    PWM_GEN_MODE_NO_SYNC);
 
 	PWMGenPeriodSet(PWM0_BASE, PWM_GEN_0, 200000);
-
-	//PWMPulseWidthSet(PWM0_BASE, PWM_OUT_0, 20000);
-
-	// Enable the PWM output signal
-	//PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT, true);  
+ 
 }
 
 
@@ -207,7 +182,7 @@ void Probe(void){
 	ADCIntClear(ADC0_BASE, 3);	// Clear the ADC interrupt flag.
 	ADCSequenceDataGet(ADC0_BASE, 3, &Data[0]); // Read ADC Value. ADC has 12-bit precision so the output ranges from 0 to 4095
         
-        //temperature
+    //temperature
 	ADCSequenceStepConfigure(ADC0_BASE, 3, 0,  ADC_CTL_CH4 | ADC_CTL_IE |ADC_CTL_END); //PD3
 	ADCIntClear(ADC0_BASE, 3);
 	ADCProcessorTrigger(ADC0_BASE, 3);
@@ -223,39 +198,27 @@ void Probe(void){
 	while(!ADCIntStatus(ADC0_BASE, 3, false)){}
 	ADCIntClear(ADC0_BASE, 3);
 	ADCSequenceDataGet(ADC0_BASE, 3, &Data[2]);
-
-  
-        
-       // for (uint32_t i=0; i<10; i++) {
-       // wind_average +=wind[i];
-       // temperature_average +=temperature[i];
-       // humidity_average +=humidity[i];
-       // }
-        
-        wind_average = Data[0];
-        temperature_average= Data[1];
-        humidity_average =Data[2];
-
-
-	if(wind_average>(uint32_t)495 & wind_average<(uint32_t)2483){// the voltage is above 0.4 and below 2v.
-		Data[0] = (((wind_average-496)*324)/1986);
+    
+    //wind-tuning  
+	if(Data[0] > (uint32_t)495 & Data[0] < (uint32_t)2483){// the voltage is above 0.4 and below 2v.
+		Data[0] = (((Data[0]-496)*324)/1986);
 	}
 
     else {
-        Data[0]=0;
+        Data[0] = 0;
 }
-        
-	if(temperature_average>(uint32_t)1551){
-		Data[1] = (((temperature_average-1552))/6);
+    //temperature-tuning    
+	if(Data[1] > (uint32_t)1551){
+		Data[1] = (((Data[1]-1552))/6);
 	}
 
     else {
         Data[1] = 0;
 }
-
-	if(humidity_average>0)
+    //humidity-tuning 
+	if(Data[2] <  0)
 	{
-		Data[2] = (humidity_average);
+		Data[2] = 0;
 	}
 }
 
@@ -280,7 +243,6 @@ int main(void) {
   nh.subscribe(sub_b);
   nh.subscribe(sub_c);
   nh.advertise(inc_encoder_a);
-  nh.advertise(inc_encoder_b);
   nh.advertise(probe_wind);
   nh.advertise(probe_humidity);
   nh.advertise(probe_temperature);
@@ -366,7 +328,7 @@ int main(void) {
   motor_b.ADC_BASE_CS = ADC1_BASE;
   motor_b.ADC_CTL_CH_CS = ADC_CTL_CH11;
 
-  // Incremental Encoder A (QEI 1)
+  // Incremental Encoder A (QEI 1)-Drill
   INC inc_a;
   inc_a.PHA_GPIO_PIN = GPIO_PIN_5;
   inc_a.PHB_GPIO_PIN = GPIO_PIN_6;
@@ -380,30 +342,15 @@ int main(void) {
   inc_a.QEI_BASE = QEI1_BASE;
   inc_a.QEI_VELDIV = QEI_VELDIV_1;
 
-  // Incremental Encoder B (QEI 0)-Not used
-  INC inc_b;
-  inc_b.PHA_GPIO_PIN = GPIO_PIN_0;
-  inc_b.PHB_GPIO_PIN = GPIO_PIN_1;
-  inc_b.IDX_GPIO_PIN = GPIO_PIN_4;
-  inc_b.QEI_SYSCTL_PERIPH_GPIO = SYSCTL_PERIPH_GPIOF;
-  inc_b.QEI_GPIO_P_PHA = GPIO_PF0_PHA0;
-  inc_b.QEI_GPIO_P_PHB = GPIO_PF1_PHB0;
-  inc_b.QEI_GPIO_P_IDX = GPIO_PF4_IDX0;
-  inc_b.QEI_SYSCTL_PERIPH_QEI = SYSCTL_PERIPH_QEI0;
-  inc_b.QEI_GPIO_PORT_BASE = GPIO_PORTF_BASE;
-  inc_b.QEI_BASE = QEI0_BASE;
-  inc_b.QEI_VELDIV = QEI_VELDIV_1; 
-
+   
   bdc_init(motor_a);
   bdc_set_enabled(motor_a, 1);
   bdc_init(motor_b);
   bdc_set_enabled(motor_b, 1);
 
   inc_init(inc_a);
-  inc_init(inc_b);
-
+  
   //PROBE initialization 
-
 
   GPIOPinTypeGPIOInput(LP_BASE, TLP);
   GPIOPinTypeGPIOInput(LP_BASE, BLP);
@@ -411,7 +358,6 @@ int main(void) {
   GPIOPadConfigSet(LP_BASE, BLP, GPIO_STRENGTH_2MA, GPIO_PIN_TYPE_STD_WPU);  
   PWM_Config();
   PWM_Stop();
-//  State = Top;
   ADC_Init();
   
 
@@ -431,41 +377,6 @@ int main(void) {
 
     bdc_set_velocity(motor_b, vel_b);
 
-//    switch(State){
-//		case Top:
-//			if(vel_c > 0){
-//				PWM_Pulse(80);
-//				State = Down;
-//			}
-//			break;
-//		case Bottom:
-//                        Probe();
-//			PWM_Pulse(20);
-//			State = Up;
-//			break;
-//		case Up:
-//			if(GPIOPinRead(LP_BASE,TLP)==0){
-//				PWM_Stop();
-//                                probe_wind_msg.data=Data[0];
-//                                probe_temperature_msg.data=Data[1];
-//                                probe_humidity_msg.data=Data[2];
-//                                probe_wind.publish(&probe_wind_msg);
-//                                probe_temperature.publish(&probe_temperature_msg);
-//                                probe_humidity.publish(&probe_humidity_msg);
-//				State = Done;
-//			}
-//			break;
-//		case Down:
-//			if(GPIOPinRead(LP_BASE,BLP)==0){
-//				PWM_Stop();
-//				State = Bottom;
-//			}
-//			break;
-//                case Done: break;
-//
-//		default:
-//			break;
-//		}
            
 	if (GPIOPinRead(LP_BASE,TLP) == TLP  && vel_c == 80) {
         PWM_Pulse(vel_c);
@@ -487,25 +398,13 @@ int main(void) {
     probe_temperature.publish(&probe_temperature_msg);                                
     probe_humidity.publish(&probe_humidity_msg);
               
-           
-        // if(reset_flag){
-        //   nh.loginfo("reset");
-      //   bdc_set_enabled(motor_a, 0);
-    //   bdc_set_enabled(motor_b, 0);
 
-    //   nh.getHardware()->delay(500);
-    //   bdc_set_enabled(motor_a, 1);
-    //   bdc_set_enabled(motor_b, 1);
-
-    //   reset_flag = false;
-    // }
     inc_dir_a = inc_get_direction(inc_a);
     inc_vel_a = inc_get_velocity(inc_a);
     inc_pos_a = inc_get_position(inc_a);
     inc_a_msg.data = inc_get_position(inc_a);
     inc_encoder_a.publish(&inc_a_msg);
-    inc_b_msg.data = inc_get_position(inc_b);
-    inc_encoder_b.publish(&inc_b_msg);
+
     nh.spinOnce();
     nh.getHardware()->delay(10);
 
