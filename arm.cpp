@@ -84,11 +84,13 @@ bool brake_flag_c = false;
 
 void vel_a_cb(const std_msgs::Int32& msg) {
   vel_a = msg.data;
+  brake_flag_a = vel_a != 0;
 }
 ros::Subscriber<std_msgs::Int32> sub_a(MOTOR_A, &vel_a_cb);
 
 void vel_b_cb(const std_msgs::Int32& msg) {
   vel_b = msg.data;
+  brake_flag_b = vel_b != 0;
 }
 ros::Subscriber<std_msgs::Int32> sub_b(MOTOR_B, &vel_b_cb);
 
