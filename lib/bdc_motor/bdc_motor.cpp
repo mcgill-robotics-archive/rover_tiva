@@ -106,13 +106,18 @@ uint32_t bdc_get_current(BDC bdc) {
 }
 
 // Engage or disengage brake
-void bdc_set_brake(BDC bdc, uint8_t engaged) {
+uint8_t bdc_set_brake(BDC bdc, uint8_t engaged) {
 	if(engaged) {
 		GPIOPinWrite(bdc.GPIO_PORT_BASE_BRAKE, bdc.GPIO_PIN_BRAKE,
 				bdc.GPIO_PIN_BRAKE);
 	} else {
 		GPIOPinWrite(bdc.GPIO_PORT_BASE_BRAKE, bdc.GPIO_PIN_BRAKE, 0);
 	}
+
+	uint8_t change = bdc.last_brake != engaged;
+	bdc.last_brake = engaged;
+	
+	return change;
 }
 
 // Read fault status of motor driver

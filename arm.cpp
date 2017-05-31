@@ -166,59 +166,49 @@ int main(void) {
   motor_init();
   encoder_init();
 
+  uint8_t wait_brakes = false;
   uint32_t time_last_update = nh.getHardware()->time();
   while (1) {
     if(nh.getHardware()->time() - time_last_update >= 10) {
       // Brake Enable/Disable
-      bdc_set_brake(motor_a, brake_flag_a);
-      bdc_set_brake(motor_b, brake_flag_b);
-#ifdef ARM_WRIST
-      bdc_set_brake(motor_c, brake_flag_c);
-#endif
-      if(brake_flag_a) {
-        bdc_set_velocity(motor_a, 0);
-      }
+      wait_brakes = false;
+      wait_brakes |= bdc_set_brake(motor_a, brake_flag_a);
+      wait_brakes |= bdc_set_brake(motor_b, brake_flag_b);
 
-      if(brake_flag_b) {
-        bdc_set_velocity(motor_b, 0);
-      }
-#ifdef ARM_WRIST
-      if(brake_flag_c) {
-        bdc_set_velocity(motor_c, 0);
-      }
-#endif
-
-
-#ifdef ARM_WRIST
-      if(brake_flag_a || brake_flag_b || brake_flag_c) {
-#else
-      if(brake_flag_a || brake_flag_b) {
-#endif
+      if(wait_brakes) {
         nh.getHardware()->delay(100);
       }
 
+      if(!brake_flag_a) {
+        bdc_set_velocity(motor_a, 0);
+      } else {
+        bdc_set_velocity(motor_a, vel_a);
+      }
+
+      if(!brake_flag_b) {
+        bdc_set_velocity(motor_b, 0);
+      } else {
+        bdc_set_velocity(motor_b, vel_b);
+      }
+
+#ifdef ARM_WRIST
+      bdc_set_velocity(motor_c, vel_c);
+#endif
+
+
       // Check for Reset
-      else if(reset_flag) {
+      if(reset_flag) {
         nh.loginfo("reset");
         bdc_set_enabled(motor_a, 0);
         bdc_set_enabled(motor_b, 0);
-#ifdef ARM_WRIST
-        bdc_set_enabled(motor_c, 0);
-#endif
       }
-
       // Enable motors and set their velocities
       else {
         bdc_set_enabled(motor_a, 1);
         bdc_set_enabled(motor_b, 1);
+
 #ifdef ARM_WRIST
         bdc_set_enabled(motor_c, 1);
-#endif
-
-        bdc_set_velocity(motor_a, vel_a);
-        bdc_set_velocity(motor_b, vel_b);
-#ifdef ARM_WRIST
-        bdc_set_velocity(motor_c, vel_c);
 #endif
       }
 

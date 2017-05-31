@@ -78,6 +78,8 @@ typedef struct BDCs {
 	uint32_t ADC_BASE_CS;
 	uint32_t ADC_CTL_CH_CS;
 
+	bool last_brake;
+
 } BDC;
 
 // Initialize all peripherals needed to interact with motor
@@ -90,7 +92,7 @@ void bdc_set_velocity(BDC bdc, int32_t velocity);
 uint32_t bdc_get_current(BDC bdc);
 
 // Engage or disengage brake
-void bdc_set_brake(BDC bdc, uint8_t engaged);
+uint8_t bdc_set_brake(BDC bdc, uint8_t engaged);
 
 // Read fault status of motor driver
 uint8_t bdc_get_fault(BDC bdc);
