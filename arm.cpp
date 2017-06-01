@@ -1,3 +1,26 @@
+// Copyright 2017 <McGill Robotics>
+// Standard includes
+#include <stdbool.h>
+#include <stdint.h>
+
+// ROS includes
+#include <ros.h>
+#include <std_msgs/Int32.h>
+#include <std_msgs/UInt8.h>
+#include <std_msgs/Bool.h>
+
+// TivaC specific includes
+extern "C" {
+  #include <driverlib/sysctl.h>
+  #include <driverlib/gpio.h>
+  #include <driverlib/pwm.h>
+  #include "inc/hw_memmap.h"
+}
+
+// MR Lib includes
+#include "../lib/bdc_motor/bdc_motor.h"
+#include "../lib/inc_encoder/inc_encoder.h"
+
 #ifdef ARM_SHOULDER
 #define MOTOR_A "motor_shoulder_a"
 #define MOTOR_B "motor_shoulder_b"
@@ -36,29 +59,6 @@
 #define INC_ENCODER_B "inc_wrist_b"
 #endif
 
-// Standard includes
-#include <stdbool.h>
-#include <stdint.h>
-
-// MR Lib includes
-#include "../lib/bdc_motor/bdc_motor.h"
-#include "../lib/inc_encoder/inc_encoder.h"
-
-// ROS includes
-#include <ros.h>
-#include <std_msgs/Int32.h>
-#include <std_msgs/UInt8.h>
-#include <std_msgs/Bool.h>
-
-// TivaC specific includes
-extern "C" {
-  #include <driverlib/sysctl.h>
-  #include <driverlib/gpio.h>
-  #include <driverlib/pwm.h>
-  #include "inc/hw_memmap.h"
-}
-
-
 // ROS nodehandle
 ros::NodeHandle nh;
 
@@ -76,21 +76,19 @@ volatile uint32_t inc_vel_b = 0;
 volatile int32_t inc_dir_b = 0;
 
 bool reset_flag = false;
-bool brake_flag_a = false;
-bool brake_flag_b = false;
+bool brake_disengaged_a = false;
+bool brake_disengaged_b = false;
 #ifdef ARM_WRIST
-bool brake_flag_c = false;
+bool brake_disengaged_c = false;
 #endif
 
 void vel_a_cb(const std_msgs::Int32& msg) {
   vel_a = msg.data;
-  brake_flag_a = vel_a != 0;
 }
 ros::Subscriber<std_msgs::Int32> sub_a(MOTOR_A, &vel_a_cb);
 
 void vel_b_cb(const std_msgs::Int32& msg) {
   vel_b = msg.data;
-  brake_flag_b = vel_b != 0;
 }
 ros::Subscriber<std_msgs::Int32> sub_b(MOTOR_B, &vel_b_cb);
 
@@ -111,18 +109,18 @@ ros::Subscriber<std_msgs::Bool> sub_reset(MOTOR_RESET, &reset_cb);
 
 // Brake Subscribers
 void brake_cb_a(const std_msgs::Bool& status) {
-  brake_flag_a = status.data;
+  brake_disengaged_a = status.data;
 }
 ros::Subscriber<std_msgs::Bool> sub_brake_a(MOTOR_BRAKE_A, &brake_cb_a);
 
 void brake_cb_b(const std_msgs::Bool& status) {
-  brake_flag_b = status.data;
+  brake_disengaged_b = status.data;
 }
 ros::Subscriber<std_msgs::Bool> sub_brake_b(MOTOR_BRAKE_B, &brake_cb_b);
 
 #ifdef ARM_WRIST
 void brake_cb_c(const std_msgs::Bool& status) {
-  brake_flag_c = status.data;
+  brake_disengaged_c = status.data;
 }
 ros::Subscriber<std_msgs::Bool> sub_brake_c(MOTOR_BRAKE_C, &brake_cb_c);
 #endif
@@ -169,26 +167,34 @@ int main(void) {
   uint8_t wait_brakes = false;
   uint32_t time_last_update = nh.getHardware()->time();
   while (1) {
-    if(nh.getHardware()->time() - time_last_update >= 10) {
+    if (nh.getHardware()->time() - time_last_update >= 10) {
       // Brake Enable/Disable
-      wait_brakes = false;
-      wait_brakes |= bdc_set_brake(motor_a, brake_flag_a);
-      wait_brakes |= bdc_set_brake(motor_b, brake_flag_b);
+      if (!vel_a) {
+        brake_disengaged_a = false;
+      }
 
-      if(wait_brakes) {
+      if (!vel_b) {
+        brake_disengaged_b = false;
+      }
+
+      wait_brakes = false;
+      wait_brakes |= bdc_set_brake(motor_a, brake_disengaged_a);
+      wait_brakes |= bdc_set_brake(motor_b, brake_disengaged_b);
+
+      if (wait_brakes) {
         nh.getHardware()->delay(100);
       }
 
-      if(!brake_flag_a) {
-        bdc_set_velocity(motor_a, 0);
-      } else {
+      if (brake_disengaged_a) {
         bdc_set_velocity(motor_a, vel_a);
+      } else {
+        bdc_set_velocity(motor_a, 0);
       }
 
-      if(!brake_flag_b) {
-        bdc_set_velocity(motor_b, 0);
-      } else {
+      if (brake_disengaged_b) {
         bdc_set_velocity(motor_b, vel_b);
+      } else {
+        bdc_set_velocity(motor_b, 0);
       }
 
 #ifdef ARM_WRIST
@@ -197,13 +203,15 @@ int main(void) {
 
 
       // Check for Reset
-      if(reset_flag) {
+      if (reset_flag) {
         nh.loginfo("reset");
         bdc_set_enabled(motor_a, 0);
         bdc_set_enabled(motor_b, 0);
-      }
-      // Enable motors and set their velocities
-      else {
+#ifdef ARM_WRIST
+        bdc_set_enabled(motor_c, 0);
+#endif
+      } else {
+        // Enable motors and set their velocities
         bdc_set_enabled(motor_a, 1);
         bdc_set_enabled(motor_b, 1);
 
@@ -229,7 +237,6 @@ int main(void) {
       fault_msg_c.data = bdc_get_fault(motor_c);
       motor_fault_c.publish(&fault_msg_b);
 #endif
-
     }
     nh.spinOnce();
   }
@@ -239,7 +246,8 @@ void tiva_init() {
   // Tiva boilerplate
   MAP_FPUEnable();
   MAP_FPULazyStackingEnable();
-  MAP_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ | SYSCTL_OSC_MAIN);
+  MAP_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ
+      | SYSCTL_OSC_MAIN);
 }
 
 void rosserial_init() {
@@ -260,7 +268,6 @@ void rosserial_init() {
 
   nh.advertise(motor_fault_a);
   nh.advertise(motor_fault_b);
-
 }
 
 void motor_init() {

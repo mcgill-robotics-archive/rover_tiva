@@ -92,7 +92,7 @@ void bdc_set_velocity(BDC bdc, int32_t velocity);
 uint32_t bdc_get_current(BDC bdc);
 
 // Engage or disengage brake
-uint8_t bdc_set_brake(BDC bdc, uint8_t engaged);
+bool bdc_set_brake(BDC bdc, bool disengaged);
 
 // Read fault status of motor driver
 uint8_t bdc_get_fault(BDC bdc);

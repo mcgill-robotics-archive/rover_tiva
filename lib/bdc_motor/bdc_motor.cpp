@@ -106,16 +106,16 @@ uint32_t bdc_get_current(BDC bdc) {
 }
 
 // Engage or disengage brake
-uint8_t bdc_set_brake(BDC bdc, uint8_t engaged) {
-	if(engaged) {
+bool bdc_set_brake(BDC bdc, bool disengaged) {
+	if(disengaged) {
 		GPIOPinWrite(bdc.GPIO_PORT_BASE_BRAKE, bdc.GPIO_PIN_BRAKE,
 				bdc.GPIO_PIN_BRAKE);
 	} else {
 		GPIOPinWrite(bdc.GPIO_PORT_BASE_BRAKE, bdc.GPIO_PIN_BRAKE, 0);
 	}
 
-	uint8_t change = bdc.last_brake != engaged;
-	bdc.last_brake = engaged;
+	bool change = bdc.last_brake != disengaged;
+	bdc.last_brake = disengaged;
 	
 	return change;
 }
