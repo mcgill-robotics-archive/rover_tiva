@@ -63,7 +63,7 @@ uint32_t Data[3];
 
 //Probe variables
 #ifdef SAMPLING
-volatile uint32_t vel_c=0;
+volatile int32_t vel_c=0;
 #endif
 
 
@@ -106,7 +106,15 @@ void vel_c_cb(const std_msgs::Int32& msg) {
 ros::Subscriber<std_msgs::Int32> sub_c("probe", &vel_c_cb); 
 #endif
 
-void PWM_Pulse(uint32_t Speed){
+void PWM_Pulse(int32_t Speed){
+ if (Speed >= 50) {
+    PWMGenConfigure(PWM0_BASE, PWM_GEN_0, PWM_GEN_MODE_UP_DOWN) ;
+ }
+
+ else if (Speed < 50) {
+     	PWMGenConfigure(PWM0_BASE, PWM_GEN_0, PWM_GEN_MODE_DOWN);
+        
+}
 	PWMPulseWidthSet(PWM0_BASE, PWM_OUT_0, (PWMGenPeriodGet(PWM0_BASE, PWM_GEN_0)/100)*Speed);
 	PWMOutputState(PWM0_BASE, PWM_OUT_0_BIT, true);
 	PWMGenEnable(PWM0_BASE, PWM_GEN_0);
@@ -142,6 +150,7 @@ void PWM_Config(void){
 	                    PWM_GEN_MODE_NO_SYNC);
 
 	PWMGenPeriodSet(PWM0_BASE, PWM_GEN_0, 200000);
+
  
 }
 
@@ -378,11 +387,11 @@ int main(void) {
     bdc_set_velocity(motor_b, vel_b);
 
            
-	if (GPIOPinRead(LP_BASE,TLP) == TLP  && vel_c == 80) {
+    if (GPIOPinRead(LP_BASE,TLP) == TLP  && vel_c >=  50) {
         PWM_Pulse(vel_c);
     }
     
-    else  if (GPIOPinRead(LP_BASE,BLP) == BLP && vel_c == 20) {
+    else  if (GPIOPinRead(LP_BASE,BLP) == BLP && vel_c < 50) {
         PWM_Pulse(vel_c);
     }
 
