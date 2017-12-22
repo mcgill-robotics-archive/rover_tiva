@@ -2,7 +2,7 @@
 
 ![Arm System](arm_system.jpg)
 
-This repository contains the complete TI TM4C123G microcontroller code for our 2017 rover, (Calliope)[https://mcgillrobotics.com/rover/].
+This repository contains the complete TI TM4C123G microcontroller code for our 2017 rover, [Calliope](https://mcgillrobotics.com/rover/).
 
 ## Setup Instructions
 - Follow the `rosserial_tivac` setup instructions here: http://wiki.ros.org/rosserial_tivac/Tutorials/TivaWare%20Setup
