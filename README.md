@@ -12,13 +12,13 @@ The USB serial numbers assigned to each TM4C can be configured inside `usb_seria
 
 The arm system (pictured above) uses three TM4Cs connected through a USB-hub backplane to:
 
-- Accept arm motor velocities and brake command over ROS topics
-- Publish arm motor positions and velocities to ROS topics
+- Accept motor velocities and brake commands over ROS topics
+- Publish motor positions and velocities to ROS topics
 
-There are three TM4Cs in the arm system:
-- Shoulder (`arm_shoulder`)
-- Elbow (`arm_elbow`)
-- Wrist (`arm_wrist`)
+There are three TM4Cs in the arm system that control the arm's:
+- Shoulder joint (`arm_shoulder`)
+- Elbow joint (`arm_elbow`)
+- Wrist joint and claw (`arm_wrist`)
 
 The code for each TM4C is the same (`arm.cpp`), but each firmware binary is built with a different CMakeList, so that each microcontroller will have a different USB serial number.
 
