@@ -1,1 +1,0 @@
-#bldc_motor
