@@ -94,24 +94,6 @@ rosserial_add_client_target(drive_middle flash)
 rosserial_add_client_target(drive_middle size)
 rosserial_add_client_target(drive_middle dump)
 
-# rosserial_add_client_target(drive_left drive_left.axf ALL)
-# rosserial_add_client_target(drive_left flash)
-# rosserial_add_client_target(drive_left size)
-# rosserial_add_client_target(drive_left dump)
-# rosserial_add_client_target(drive_right drive_right.axf ALL)
-# rosserial_add_client_target(drive_right flash)
-# rosserial_add_client_target(drive_right size)
-# rosserial_add_client_target(drive_right dump)
-# rosserial_add_client_target(sampling sampling.axf ALL)
-# rosserial_add_client_target(sampling flash)
-# rosserial_add_client_target(sampling size)
-# rosserial_add_client_target(sampling dump)
-# rosserial_add_client_target(power power.axf ALL)
-# rosserial_add_client_target(power flash)
-# rosserial_add_client_target(power size)
-# rosserial_add_client_target(power dump)
-
-
 # Install
 install(TARGETS brake_motor_service reset_motor_service
   ARCHIVE DESTINATION ${CATKIN_PACKAGE_LIB_DESTINATION}
