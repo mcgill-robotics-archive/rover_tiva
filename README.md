@@ -1,5 +1,9 @@
 # Rover Tiva Microcontroller Code Submodule
 
+![Arm System](arm_system.jpg)
+
+This repository contains the complete TI TM4C123G microcontroller code for our 2017 rover, (Calliope)[https://mcgillrobotics.com/rover/].
+
 ## Setup Instructions
 - Follow the `rosserial_tivac` setup instructions here: http://wiki.ros.org/rosserial_tivac/Tutorials/TivaWare%20Setup
 - Be sure to install `rosserial_tivac` from source, not from the Ubuntu repo: https://github.com/vmatos/rosserial_tivac
@@ -7,7 +11,7 @@
 - Copy `71-rover-tiva.rules` to `/etc/udev/rules.d/` and refresh the udev rules (you could do this by rebooting)
 
 ## Running Instructions 
-- When you plug in the backplane, `/dev` should contain `arm_shoulder`, `arm_elbow`, and `arm_wrist` symlinks
+- When you plug in the arm backplane, `/dev` should contain `arm_shoulder`, `arm_elbow`, and `arm_wrist` symlinks
 - `roscd` and run `roslaunch rover_tiva arm.launch`
 - Subscribe/publish to appropriate topics
   - `motor_shoulder_a`: Publish motor commands to these topics (velocities from -4000 to 4000)
