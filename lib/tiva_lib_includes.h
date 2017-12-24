@@ -1,29 +1,27 @@
-/*******************************************************************************
- *                          TIVA LIBRARY includes    			               *
+/******************************************************************************
+ *                          TIVA LIBRARY includes                             *
  ******************************************************************************/
-
-
 
 #ifndef _TIVA_LIB_INCLUDES_H_
 #define _TIVA_LIB_INCLUDES_H_
 
-//Include
+// Include
+#include <ctype.h>
+#include <inttypes.h>
+#include <math.h>
 #include <stdarg.h>
-#include <stdint.h>
 #include <stdbool.h>
+#include <stdint.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-#include <ctype.h>
-#include <math.h>
-#include <inttypes.h>
 
-#include "inc/hw_memmap.h"
 #include "inc/hw_gpio.h"
 #include "inc/hw_ints.h"
-#include "inc/hw_types.h"
+#include "inc/hw_memmap.h"
 #include "inc/hw_qei.h"
 #include "inc/hw_ssi.h"
+#include "inc/hw_types.h"
 
 #include "driverlib/adc.h"
 #include "driverlib/debug.h"
@@ -41,5 +39,3 @@
 
 #include "utils/uartstdio.h"
 #endif
-
-

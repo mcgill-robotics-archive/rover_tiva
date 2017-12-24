@@ -9,7 +9,7 @@
  *
  */
 
-//TODO Clean up these includes
+// TODO Clean up these includes
 //#include <stdint.h>
 //#include <stdlib.h>
 //#include <stdbool.h>
@@ -44,41 +44,41 @@
 #define BDC_MOTOR_H_
 
 typedef struct BDCs {
-	// IN1 - Speed Output
-	uint32_t SYSCTL_PERIPH_PWM_IN1;
-	uint32_t SYSCTL_PERIPH_GPIO_IN1;
-	uint32_t GPIO_PWM_IN1;
-	uint32_t GPIO_PORT_BASE_IN1;
-	uint32_t GPIO_PIN_IN1;
-	uint32_t PWM_BASE_IN1;
-	uint32_t PWM_GEN_IN1;
-	uint32_t PWM_OUT_BIT_IN1;
-	uint32_t PWM_OUT_IN1;
-	// IN2 - Direction Output
-	uint32_t SYSCTL_PERIPH_GPIO_IN2;
-	uint32_t GPIO_PORT_BASE_IN2;
-	uint32_t GPIO_PIN_IN2;
-	// nFAULT - Fault Status Input
-	uint32_t SYSCTL_PERIPH_GPIO_nFAULT;
-	uint32_t GPIO_PORT_BASE_nFAULT;
-	uint32_t GPIO_PIN_nFAULT;
-	// nRESET - Reset Output
-	uint32_t SYSCTL_PERIPH_GPIO_nRESET;
-	uint32_t GPIO_PORT_BASE_nRESET;
-	uint32_t GPIO_PIN_nRESET;
-	// BRAKE - Brake Output
-	uint32_t SYSCTL_PERIPH_GPIO_BRAKE;
-	uint32_t GPIO_PORT_BASE_BRAKE;
-	uint32_t GPIO_PIN_BRAKE;
-	// CS - Current Sense Input
-	uint32_t SYSCTL_PERIPH_ADC_CS;
-	uint32_t SYSCTL_PERIPH_GPIO_CS;
-	uint32_t GPIO_PORT_BASE_CS;
-	uint32_t GPIO_PIN_CS;
-	uint32_t ADC_BASE_CS;
-	uint32_t ADC_CTL_CH_CS;
+  // IN1 - Speed Output
+  uint32_t SYSCTL_PERIPH_PWM_IN1;
+  uint32_t SYSCTL_PERIPH_GPIO_IN1;
+  uint32_t GPIO_PWM_IN1;
+  uint32_t GPIO_PORT_BASE_IN1;
+  uint32_t GPIO_PIN_IN1;
+  uint32_t PWM_BASE_IN1;
+  uint32_t PWM_GEN_IN1;
+  uint32_t PWM_OUT_BIT_IN1;
+  uint32_t PWM_OUT_IN1;
+  // IN2 - Direction Output
+  uint32_t SYSCTL_PERIPH_GPIO_IN2;
+  uint32_t GPIO_PORT_BASE_IN2;
+  uint32_t GPIO_PIN_IN2;
+  // nFAULT - Fault Status Input
+  uint32_t SYSCTL_PERIPH_GPIO_nFAULT;
+  uint32_t GPIO_PORT_BASE_nFAULT;
+  uint32_t GPIO_PIN_nFAULT;
+  // nRESET - Reset Output
+  uint32_t SYSCTL_PERIPH_GPIO_nRESET;
+  uint32_t GPIO_PORT_BASE_nRESET;
+  uint32_t GPIO_PIN_nRESET;
+  // BRAKE - Brake Output
+  uint32_t SYSCTL_PERIPH_GPIO_BRAKE;
+  uint32_t GPIO_PORT_BASE_BRAKE;
+  uint32_t GPIO_PIN_BRAKE;
+  // CS - Current Sense Input
+  uint32_t SYSCTL_PERIPH_ADC_CS;
+  uint32_t SYSCTL_PERIPH_GPIO_CS;
+  uint32_t GPIO_PORT_BASE_CS;
+  uint32_t GPIO_PIN_CS;
+  uint32_t ADC_BASE_CS;
+  uint32_t ADC_CTL_CH_CS;
 
-	bool last_brake;
+  bool last_brake;
 
 } BDC;
 

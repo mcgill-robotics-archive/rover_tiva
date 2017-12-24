@@ -5,16 +5,16 @@
 
 // ROS includes
 #include <ros.h>
+#include <std_msgs/Bool.h>
 #include <std_msgs/Int32.h>
 #include <std_msgs/UInt8.h>
-#include <std_msgs/Bool.h>
 
 // TivaC specific includes
 extern "C" {
-  #include <driverlib/sysctl.h>
-  #include <driverlib/gpio.h>
-  #include <driverlib/pwm.h>
-  #include "inc/hw_memmap.h"
+#include <driverlib/gpio.h>
+#include <driverlib/pwm.h>
+#include <driverlib/sysctl.h>
+#include "inc/hw_memmap.h"
 }
 
 // MR Lib includes
@@ -82,28 +82,19 @@ bool brake_disengaged_b = false;
 bool brake_disengaged_c = false;
 #endif
 
-void vel_a_cb(const std_msgs::Int32& msg) {
-  vel_a = msg.data;
-}
+void vel_a_cb(const std_msgs::Int32& msg) { vel_a = msg.data; }
 ros::Subscriber<std_msgs::Int32> sub_a(MOTOR_A, &vel_a_cb);
 
-void vel_b_cb(const std_msgs::Int32& msg) {
-  vel_b = msg.data;
-}
+void vel_b_cb(const std_msgs::Int32& msg) { vel_b = msg.data; }
 ros::Subscriber<std_msgs::Int32> sub_b(MOTOR_B, &vel_b_cb);
 
 #ifdef ARM_WRIST
-void vel_c_cb(const std_msgs::Int32& msg) {
-  vel_c = msg.data;
-}
+void vel_c_cb(const std_msgs::Int32& msg) { vel_c = msg.data; }
 ros::Subscriber<std_msgs::Int32> sub_c("motor_wrist_claw", &vel_c_cb);
 #endif
 
-
 // Reset Subscriber
-void reset_cb(const std_msgs::Bool& status) {
-  reset_flag = status.data;
-}
+void reset_cb(const std_msgs::Bool& status) { reset_flag = status.data; }
 
 ros::Subscriber<std_msgs::Bool> sub_reset(MOTOR_RESET, &reset_cb);
 
@@ -125,13 +116,11 @@ void brake_cb_c(const std_msgs::Bool& status) {
 ros::Subscriber<std_msgs::Bool> sub_brake_c(MOTOR_BRAKE_C, &brake_cb_c);
 #endif
 
-
 std_msgs::Int32 inc_a_msg;
 ros::Publisher inc_encoder_a(INC_ENCODER_A, &inc_a_msg);
 
 std_msgs::Int32 inc_b_msg;
 ros::Publisher inc_encoder_b(INC_ENCODER_B, &inc_b_msg);
-
 
 std_msgs::Bool fault_msg_a;
 ros::Publisher motor_fault_a(MOTOR_FAULT_A, &fault_msg_a);
@@ -201,7 +190,6 @@ int main(void) {
       bdc_set_velocity(motor_c, vel_c);
 #endif
 
-
       // Check for Reset
       if (reset_flag) {
         nh.loginfo("reset");
@@ -246,8 +234,8 @@ void tiva_init() {
   // Tiva boilerplate
   MAP_FPUEnable();
   MAP_FPULazyStackingEnable();
-  MAP_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ
-      | SYSCTL_OSC_MAIN);
+  MAP_SysCtlClockSet(SYSCTL_SYSDIV_2_5 | SYSCTL_USE_PLL | SYSCTL_XTAL_16MHZ |
+                     SYSCTL_OSC_MAIN);
 }
 
 void rosserial_init() {
